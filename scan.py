@@ -112,7 +112,7 @@ class Plexer:
     def t_OP_UMINUS(self, t):
         r'-'
         if self.prev and self.prev.type in (
-                'RPAR', 'ID', 'INT_LIT', 'RBRAK'):
+                'ID', 'INT_LIT', 'RPAR', 'RBRAK'):
             t.type = 'OP_MINUS'
         return t
 
@@ -122,7 +122,7 @@ class Plexer:
 
     def t_error(self, t):
         t = self.rectify_token(t)
-        print(f"error: '{t.value[0]}' found at {t.lineno}: {t.begpos},{t.endpos}")
+        print(f"error: '{t.value[0]}' found at {t.lineno},{t.begpos}")
         self.lexer.skip(1)
 
     def t_eof(self, t):
