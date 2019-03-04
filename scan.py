@@ -168,7 +168,7 @@ class Plexer:
 from sys import argv, stdin
 
 f = stdin if len(argv) < 2 else open(argv[1])
-m = Plexer(f)
+scanner = Plexer(f)
 
-for tok in m:
+for tok in scanner:
     print(tok)
