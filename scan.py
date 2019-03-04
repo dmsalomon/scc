@@ -4,10 +4,10 @@ import ply.lex as lex
 class PlexToken:
     def __init__(self, t):
         self.type = t.type
-        if t.type != 'ID' and t.type != 'INT_LIT':
-            self.text = t.value
-        else:
+        if t.type in ('ID', 'INT_LIT'):
             self.text = t.text
+        else:
+            self.text = t.value
         self.value = t.value
         self.lineno = t.lineno
         self.begpos = t.lexpos+1
@@ -167,7 +167,7 @@ class Plexer:
 
 from sys import argv, stdin
 
-f = stdin if len(argv) < 2 else open(argv[1], 'r')
+f = stdin if len(argv) < 2 else open(argv[1])
 m = Plexer(f)
 
 for tok in m:
