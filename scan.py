@@ -1,5 +1,6 @@
 
 import ply.lex as lex
+import sys
 
 class PlexToken:
     def __init__(self, t):
@@ -18,6 +19,7 @@ class PlexToken:
 
     def __repr__(self):
         return str(self)
+
 
 class Plexer:
     reserved = {
@@ -94,7 +96,8 @@ class Plexer:
         t.type = self.reserved.get(t.value, t.type)
         t.text = t.value
         if len(t.value) > 31:
-            print(f'warning: identifier too long: {t.value} truncated to {t.value[:31]}')
+            tok = self.plextoken(t)
+            print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: identifier too long: '{t.value}' truncated to '{t.value[:31]}'", file=sys.stderr)
             t.value = t.value[:31]
         return t
 
@@ -106,7 +109,8 @@ class Plexer:
         if t.value > INT32_MAX:
             v = t.value
             t.value &= INT32_MAX
-            print(f"warning: integer larger than 32-bits: {v} truncated to {t.value}")
+            tok = self.plextoken(t)
+            print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: integer larger than 32-bits: {v} truncated to {t.value}", file=sys.stderr)
         return t
 
     def t_OP_UMINUS(self, t):
@@ -121,8 +125,8 @@ class Plexer:
         self.lineno += len(t.value)
 
     def t_error(self, t):
-        t = self.rectify_token(t)
-        print(f"error: '{t.value[0]}' found at {t.lineno},{t.begpos}")
+        t = self.plextoken(t)
+        print(f"{t.lineno}:{t.begpos},{t.begpos}: invalid char: '{t.value[0]}'", file=sys.stderr)
         self.lexer.skip(1)
 
     def t_eof(self, t):
@@ -138,14 +142,14 @@ class Plexer:
         self.tok = None
         self.prev = None
 
-    def rectify_token(self, t):
+    def plextoken(self, t):
         if t:
             t.lineno = self.lineno
             return PlexToken(t)
         return t
 
     def ntok(self):
-        self.prev = self.rectify_token(self.lexer.token())
+        self.prev = self.plextoken(self.lexer.token())
         return self.prev
 
     def next(self):
@@ -165,9 +169,7 @@ class Plexer:
         while self.peek():
             yield self.next()
 
-from sys import argv, stdin
-
-f = stdin if len(argv) < 2 else open(argv[1])
+f = sys.stdin if len(sys.argv) < 2 else open(sys.argv[1])
 scanner = Plexer(f)
 
 for tok in scanner:
