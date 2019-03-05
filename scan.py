@@ -174,3 +174,5 @@ scanner = Plexer(f)
 
 for tok in scanner:
     print(tok)
+
+f.close()
