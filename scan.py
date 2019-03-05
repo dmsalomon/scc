@@ -14,11 +14,8 @@ class PlexToken:
         self.begpos = t.lexpos+1
         self.endpos = self.begpos + len(self.text) - 1
 
-    def __str__(self):
-        return f'Token({self.type},{self.text},{repr(self.value)},{self.lineno},{self.begpos},{self.endpos})'
-
     def __repr__(self):
-        return str(self)
+        return f'Token({self.type},{self.text},{repr(self.value)},{self.lineno},{self.begpos},{self.endpos})'
 
 
 class Plexer:
@@ -64,7 +61,6 @@ class Plexer:
         'OP_MINUS',
         'OP_MULT',
         'OP_DIV',
-        'OP_UMINUS',
         'COMMENT',
     ] + list(reserved.values())
 
@@ -85,22 +81,28 @@ class Plexer:
     t_OP_EQUAL          = r'=='
     t_OP_NOTEQUA        = r'!='
     t_OP_PLUS           = r'\+'
+    t_OP_MINUS          = r'-'
     t_OP_MULT           = r'\*'
     t_OP_DIV            = r'\/'
     t_COMMENT           = r'\*\*\*.*$'
 
     t_ignore            = ' \t\v\r'
 
+    # maximum identifier is 31 characters long (like C)
     def t_ID(self, t):
         r'[_a-zA-Z]+'
         t.type = self.reserved.get(t.value, t.type)
         t.text = t.value
         if len(t.value) > 31:
-            tok = self.plextoken(t)
-            print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: identifier too long: '{t.value}' truncated to '{t.value[:31]}'", file=sys.stderr)
+            s = self.plextoken(t)
+            print(f"{s.lineno}:{s.begpos},{s.endpos}: identifier too long: '{t.value}' truncated to '{t.value[:31]}'", file=sys.stderr)
             t.value = t.value[:31]
         return t
 
+    """
+    maximum signed 32-bit is 0x7fffffff
+    value is truncated by taking 31 least significant bits
+    """
     def t_INT_LIT(self, t):
         r'\d+'
         INT32_MAX = 0x7fffffff
@@ -111,13 +113,6 @@ class Plexer:
             t.value &= INT32_MAX
             tok = self.plextoken(t)
             print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: integer larger than 32-bits: {v} truncated to {t.value}", file=sys.stderr)
-        return t
-
-    def t_OP_UMINUS(self, t):
-        r'-'
-        if self.prev and self.prev.type in (
-                'ID', 'INT_LIT', 'RPAR', 'RBRAK'):
-            t.type = 'OP_MINUS'
         return t
 
     def t_newline(self, t):
@@ -140,7 +135,6 @@ class Plexer:
         self.src = src
         self.lineno = 1
         self.tok = None
-        self.prev = None
 
     def plextoken(self, t):
         if t:
@@ -149,8 +143,7 @@ class Plexer:
         return t
 
     def ntok(self):
-        self.prev = self.plextoken(self.lexer.token())
-        return self.prev
+        return self.plextoken(self.lexer.token())
 
     def next(self):
         if self.tok:
@@ -169,10 +162,15 @@ class Plexer:
         while self.peek():
             yield self.next()
 
-f = sys.stdin if len(sys.argv) < 2 else open(sys.argv[1])
-scanner = Plexer(f)
 
-for tok in scanner:
-    print(tok)
+def main():
+    f = sys.stdin if len(sys.argv) < 2 else open(sys.argv[1])
+    scanner = Plexer(f)
 
-f.close()
+    for tok in scanner:
+        print(tok)
+
+    f.close()
+
+if __name__ == '__main__':
+    main()
