@@ -86,7 +86,7 @@ class Plexer:
     t_OP_DIV            = r'\/'
     t_COMMENT           = r'\*\*\*.*$'
 
-    t_ignore            = ' \t\v\r'
+    t_ignore            = ' \t\v'
 
     # maximum identifier is 31 characters long (like C)
     def t_ID(self, t):
@@ -116,8 +116,8 @@ class Plexer:
         return t
 
     def t_newline(self, t):
-        r'\n+'
-        self.lineno += len(t.value)
+        r'\r\n?|\n'
+        self.lineno += 1
 
     def t_error(self, t):
         t = self.plextoken(t)
@@ -167,8 +167,11 @@ def main():
     f = sys.stdin if len(sys.argv) < 2 else open(sys.argv[1])
     scanner = Plexer(f)
 
-    for tok in scanner:
-        print(tok)
+    for t in scanner:
+        print(t.type, end=' ')
+        if t.type in ('ID', 'INT_LIT', 'COMMENT'):
+            print(f'value {repr(t.value)}', end=' ')
+        print(f'on line {t.lineno}, char {t.begpos} to {t.endpos}')
 
     f.close()
 
