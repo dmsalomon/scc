@@ -33,6 +33,7 @@ class Plexer:
         'elsif':    'KW_ELSIF',
         'else':     'KW_ELSE',
         'foreach':  'KW_FOREACH',
+        'for':      'KW_FOR',
         'in':       'KW_IN',
         'return':   'RETURN',
         'print':    'PRINT',
