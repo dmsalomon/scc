@@ -3,16 +3,25 @@ import ply.lex as lex
 import sys
 
 class PlexToken:
-    def __init__(self, t):
-        self.type = t.type
-        if t.type in ('ID', 'INT_LIT'):
-            self.text = t.text
-        else:
-            self.text = t.value
-        self.value = t.value
-        self.lineno = t.lineno
-        self.begpos = t.lexpos+1
-        self.endpos = self.begpos + len(self.text) - 1
+    def __init__(self, _type, text, value, lineno, begpos, endpos):
+        self.type   = _type
+        self.text   = text
+        self.value  = value
+        self.lineno = lineno
+        self.begpos = begpos
+        self.endpos = endpos
+
+    @classmethod
+    def from_token(cls, t):
+        text = t.text if t.type in ('ID', 'INT_LIT') else t.value
+        return cls(
+            t.type,
+            text,
+            t.value,
+            t.lineno,
+            t.lexpos+1,
+            t.lexpos + len(text),
+        )
 
     def __repr__(self):
         return f'Token({self.type},{self.text},{repr(self.value)},{self.lineno},{self.begpos},{self.endpos})'
@@ -89,7 +98,7 @@ class Plexer:
 
     t_ignore            = ' \t\v'
 
-    # maximum identifier is 31 characters long (like C)
+    # maximum identifier length is 31 characters long (like C)
     def t_ID(self, t):
         r'[_a-zA-Z]+'
         t.type = self.reserved.get(t.value, t.type)
@@ -100,10 +109,8 @@ class Plexer:
             t.value = t.value[:31]
         return t
 
-    """
-    maximum signed 32-bit is 0x7fffffff
-    value is truncated by taking 31 least significant bits
-    """
+    # maximum signed 32-bit is 0x7fffffff
+    # value is truncated by taking 31 least significant bits
     def t_INT_LIT(self, t):
         r'\d+'
         INT32_MAX = 0x7fffffff
@@ -140,7 +147,7 @@ class Plexer:
     def plextoken(self, t):
         if t:
             t.lineno = self.lineno
-            return PlexToken(t)
+            return PlexToken.from_token(t)
         return t
 
     def ntok(self):
