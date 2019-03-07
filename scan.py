@@ -1,3 +1,5 @@
+# \file scan.py
+# \author Dov Salomon (dms833@nyu.edu)
 
 import ply.lex as lex
 import sys
