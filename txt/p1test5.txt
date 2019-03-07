@@ -1,0 +1,26 @@
+
+global jj = 5;
+
+defun fib(n)
+	if x < 1 then
+		return 1;
+	else
+		return fib(n-1) + fib(n-2);
+	end if
+end defun
+
+defun avg(arr, n)
+	local sum = 0;
+	foreach i in 1..n
+		sum = sum + arr[i];
+	end for
+	return (sum/n);
+end defun
+
+if jj != 5 then
+	jj <-> jj
+end if
+
+array arr[1..10];
+arr[4] = 20;
+print avg(arr, 10);

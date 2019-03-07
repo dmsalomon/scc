@@ -1,0 +1,84 @@
+OP_MINUS on line 1, char 1 to 1
+ID value 'x' on line 1, char 2 to 2
+OP_MINUS on line 1, char 3 to 3
+OP_MINUS on line 1, char 4 to 4
+OP_MINUS on line 1, char 5 to 5
+OP_MINUS on line 1, char 6 to 6
+LPAR on line 1, char 7 to 7
+ID value 'x' on line 1, char 8 to 8
+RPAR on line 1, char 9 to 9
+ID value 'f' on line 3, char 1 to 1
+LPAR on line 3, char 2 to 2
+OP_MINUS on line 3, char 3 to 3
+ID value 'x' on line 3, char 4 to 4
+RPAR on line 3, char 5 to 5
+ID value 'x' on line 5, char 1 to 1
+ASSIGN on line 5, char 3 to 3
+INT_LIT value 3 on line 5, char 5 to 5
+OP_PLUS on line 5, char 7 to 7
+INT_LIT value 4 on line 5, char 10 to 10
+ID value 'v' on line 7, char 1 to 1
+ASSIGN on line 7, char 3 to 3
+INT_LIT value 3 on line 7, char 5 to 5
+OP_DIV on line 7, char 7 to 7
+INT_LIT value 4 on line 7, char 9 to 9
+OP_MULT on line 7, char 11 to 11
+LPAR on line 7, char 13 to 13
+INT_LIT value 5 on line 7, char 15 to 15
+OP_MINUS on line 7, char 17 to 17
+INT_LIT value 9 on line 7, char 19 to 19
+RPAR on line 7, char 21 to 21
+OP_MINUS on line 7, char 23 to 23
+LPAR on line 7, char 25 to 25
+OP_MINUS on line 7, char 26 to 26
+INT_LIT value 32 on line 7, char 27 to 28
+RPAR on line 7, char 29 to 29
+KW_IF on line 7, char 31 to 32
+ID value 'x' on line 7, char 34 to 34
+OP_GREATER on line 7, char 36 to 36
+INT_LIT value 5 on line 7, char 38 to 38
+KW_ELSE on line 7, char 40 to 43
+OP_NOTEQUA on line 7, char 45 to 46
+OP_MULT on line 7, char 48 to 48
+OP_MULT on line 7, char 49 to 49
+ID value 'this' on line 7, char 51 to 54
+COMMENT value '*** this *** +' on line 7, char 56 to 69
+12:1,1: invalid char: '$'
+OP_MULT on line 12, char 3 to 3
+OP_DOT on line 12, char 5 to 5
+OP_DOTDOT on line 12, char 7 to 8
+OP_DOTDOT on line 12, char 10 to 11
+OP_DOT on line 12, char 12 to 12
+SEMI on line 12, char 13 to 13
+ID value 'v' on line 12, char 15 to 15
+12:17,17: invalid char: '&'
+12:19,19: invalid char: '%'
+12:21,21: invalid char: '#'
+12:23,23: invalid char: '@'
+12:25,25: invalid char: '!'
+12:26,26: invalid char: '!'
+OP_NOTEQUA on line 12, char 27 to 28
+OP_MINUS on line 13, char 1 to 1
+13:2,20: integer larger than 32-bits: 3427463586438576438 truncated to 1849817398
+INT_LIT value 1849817398 on line 13, char 2 to 20
+15:1,45: identifier too long: 'this_is_an_identifier_that_is_simply_too_long' truncated to 'this_is_an_identifier_that_is_s'
+ID value 'this_is_an_identifier_that_is_s' on line 15, char 1 to 45
+ID value 'amorereasonableidentifier' on line 15, char 47 to 71
+ID value '__f_d__' on line 17, char 1 to 7
+ID value '__' on line 17, char 9 to 10
+PRINT on line 19, char 1 to 5
+LPAR on line 19, char 6 to 6
+ID value 'x' on line 19, char 7 to 7
+RPAR on line 19, char 8 to 8
+OP_PLUS on line 19, char 10 to 10
+OP_DOTDOT on line 19, char 12 to 13
+EXCHANGE on line 19, char 15 to 17
+INT_LIT value 12 on line 19, char 19 to 20
+LBRAK on line 19, char 22 to 22
+RBRAK on line 19, char 24 to 24
+COMMENT value '*** array tuple <->     v' on line 19, char 26 to 50
+INT_LIT value 2147483647 on line 21, char 1 to 10
+21:12,21: integer larger than 32-bits: 2147483648 truncated to 0
+INT_LIT value 0 on line 21, char 12 to 21
+21:23,32: integer larger than 32-bits: 2147483650 truncated to 2
+INT_LIT value 2 on line 21, char 23 to 32

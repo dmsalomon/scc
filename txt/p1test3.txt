@@ -26,15 +26,15 @@ arr[8]=68;
 arr[9]=44;
 arr[10]=55;
 
-for i=1..9 do
-  for j=2..10 do
+foreach i=1..9 do
+  foreach j=2..10 do
      if arr[i]>arr[j] then
         arr[i] <-> arr[j];
      end if
   end for
 end for
 
-for i=1..10 to
+foreach i=1..10 to
    print arr[i]
 end for   
 

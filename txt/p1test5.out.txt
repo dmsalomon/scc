@@ -1,0 +1,109 @@
+KW_GLOBAL on line 2, char 1 to 6
+ID value 'jj' on line 2, char 8 to 9
+ASSIGN on line 2, char 11 to 11
+INT_LIT value 5 on line 2, char 13 to 13
+SEMI on line 2, char 14 to 14
+KW_DEFUN on line 4, char 1 to 5
+ID value 'fib' on line 4, char 7 to 9
+LPAR on line 4, char 10 to 10
+ID value 'n' on line 4, char 11 to 11
+RPAR on line 4, char 12 to 12
+KW_IF on line 5, char 2 to 3
+ID value 'x' on line 5, char 5 to 5
+OP_LESS on line 5, char 7 to 7
+INT_LIT value 1 on line 5, char 9 to 9
+KW_THEN on line 5, char 11 to 14
+RETURN on line 6, char 3 to 8
+INT_LIT value 1 on line 6, char 10 to 10
+SEMI on line 6, char 11 to 11
+KW_ELSE on line 7, char 2 to 5
+RETURN on line 8, char 3 to 8
+ID value 'fib' on line 8, char 10 to 12
+LPAR on line 8, char 13 to 13
+ID value 'n' on line 8, char 14 to 14
+OP_MINUS on line 8, char 15 to 15
+INT_LIT value 1 on line 8, char 16 to 16
+RPAR on line 8, char 17 to 17
+OP_PLUS on line 8, char 19 to 19
+ID value 'fib' on line 8, char 21 to 23
+LPAR on line 8, char 24 to 24
+ID value 'n' on line 8, char 25 to 25
+OP_MINUS on line 8, char 26 to 26
+INT_LIT value 2 on line 8, char 27 to 27
+RPAR on line 8, char 28 to 28
+SEMI on line 8, char 29 to 29
+KW_END on line 9, char 2 to 4
+KW_IF on line 9, char 6 to 7
+KW_END on line 10, char 1 to 3
+KW_DEFUN on line 10, char 5 to 9
+KW_DEFUN on line 12, char 1 to 5
+ID value 'avg' on line 12, char 7 to 9
+LPAR on line 12, char 10 to 10
+ID value 'arr' on line 12, char 11 to 13
+OP_COMMA on line 12, char 14 to 14
+ID value 'n' on line 12, char 16 to 16
+RPAR on line 12, char 17 to 17
+KW_LOCAL on line 13, char 2 to 6
+ID value 'sum' on line 13, char 8 to 10
+ASSIGN on line 13, char 12 to 12
+INT_LIT value 0 on line 13, char 14 to 14
+SEMI on line 13, char 15 to 15
+KW_FOREACH on line 14, char 2 to 8
+ID value 'i' on line 14, char 10 to 10
+KW_IN on line 14, char 12 to 13
+INT_LIT value 1 on line 14, char 15 to 15
+OP_DOTDOT on line 14, char 16 to 17
+ID value 'n' on line 14, char 18 to 18
+ID value 'sum' on line 15, char 3 to 5
+ASSIGN on line 15, char 7 to 7
+ID value 'sum' on line 15, char 9 to 11
+OP_PLUS on line 15, char 13 to 13
+ID value 'arr' on line 15, char 15 to 17
+LBRAK on line 15, char 18 to 18
+ID value 'i' on line 15, char 19 to 19
+RBRAK on line 15, char 20 to 20
+SEMI on line 15, char 21 to 21
+KW_END on line 16, char 2 to 4
+KW_FOR on line 16, char 6 to 8
+RETURN on line 17, char 2 to 7
+LPAR on line 17, char 9 to 9
+ID value 'sum' on line 17, char 10 to 12
+OP_DIV on line 17, char 13 to 13
+ID value 'n' on line 17, char 14 to 14
+RPAR on line 17, char 15 to 15
+SEMI on line 17, char 16 to 16
+KW_END on line 18, char 1 to 3
+KW_DEFUN on line 18, char 5 to 9
+KW_IF on line 20, char 1 to 2
+ID value 'jj' on line 20, char 4 to 5
+OP_NOTEQUA on line 20, char 7 to 8
+INT_LIT value 5 on line 20, char 10 to 10
+KW_THEN on line 20, char 12 to 15
+ID value 'jj' on line 21, char 2 to 3
+EXCHANGE on line 21, char 5 to 7
+ID value 'jj' on line 21, char 9 to 10
+KW_END on line 22, char 1 to 3
+KW_IF on line 22, char 5 to 6
+KW_ARRAY on line 24, char 1 to 5
+ID value 'arr' on line 24, char 7 to 9
+LBRAK on line 24, char 10 to 10
+INT_LIT value 1 on line 24, char 11 to 11
+OP_DOTDOT on line 24, char 12 to 13
+INT_LIT value 10 on line 24, char 14 to 15
+RBRAK on line 24, char 16 to 16
+SEMI on line 24, char 17 to 17
+ID value 'arr' on line 25, char 1 to 3
+LBRAK on line 25, char 4 to 4
+INT_LIT value 4 on line 25, char 5 to 5
+RBRAK on line 25, char 6 to 6
+ASSIGN on line 25, char 8 to 8
+INT_LIT value 20 on line 25, char 10 to 11
+SEMI on line 25, char 12 to 12
+PRINT on line 26, char 1 to 5
+ID value 'avg' on line 26, char 7 to 9
+LPAR on line 26, char 10 to 10
+ID value 'arr' on line 26, char 11 to 13
+OP_COMMA on line 26, char 14 to 14
+INT_LIT value 10 on line 26, char 16 to 17
+RPAR on line 26, char 18 to 18
+SEMI on line 26, char 19 to 19

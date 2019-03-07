@@ -1,0 +1,25 @@
+COMMENT value '*** scanner test 2' on line 1, char 1 to 18
+COMMENT value '*** this comment contains something that looks like legal code: a=1; b=a+b;' on line 2, char 1 to 75
+COMMENT value "*** but it's still just a comment!!!!" on line 3, char 1 to 37
+COMMENT value '*** this is just garbage...' on line 5, char 1 to 27
+6:1,1: invalid char: '#'
+6:2,2: invalid char: '#'
+6:3,3: invalid char: '#'
+6:4,4: invalid char: '#'
+6:5,5: invalid char: '!'
+6:6,6: invalid char: '@'
+6:7,7: invalid char: '#'
+6:8,8: invalid char: '%'
+6:9,9: invalid char: '^'
+6:10,10: invalid char: '}'
+6:11,11: invalid char: '}'
+6:12,12: invalid char: '{'
+7:1,1: invalid char: '\'
+8:1,1: invalid char: '\'
+8:2,2: invalid char: '\'
+8:3,3: invalid char: '!'
+8:4,4: invalid char: '#'
+8:5,5: invalid char: '@'
+8:6,6: invalid char: '!'
+8:7,7: invalid char: '$'
+COMMENT value '*** end of garbage' on line 9, char 1 to 18

@@ -1,0 +1,62 @@
+COMMENT value '*** this test file contains all the legal tokens in the language, I believe' on line 1, char 1 to 75
+COMMENT value '*** this is a comment' on line 2, char 1 to 21
+COMMENT value '*** all keywords' on line 3, char 1 to 16
+KW_ARRAY on line 4, char 1 to 5
+KW_DEFUN on line 5, char 1 to 5
+KW_DO on line 6, char 1 to 2
+KW_ELSE on line 7, char 1 to 4
+KW_ELSIF on line 8, char 1 to 5
+KW_END on line 9, char 1 to 3
+KW_FOREACH on line 10, char 1 to 7
+KW_GLOBAL on line 11, char 1 to 6
+KW_IF on line 12, char 1 to 2
+KW_IN on line 13, char 1 to 2
+KW_LOCAL on line 14, char 1 to 5
+PRINT on line 15, char 1 to 5
+RETURN on line 16, char 1 to 6
+KW_THEN on line 17, char 1 to 4
+KW_TUPLE on line 18, char 1 to 5
+KW_WHILE on line 19, char 1 to 5
+COMMENT value '*** all operators and other punctuation' on line 20, char 1 to 39
+OP_NOTEQUA on line 21, char 1 to 2
+LPAR on line 22, char 1 to 1
+RPAR on line 23, char 1 to 1
+OP_MULT on line 24, char 1 to 1
+OP_PLUS on line 25, char 1 to 1
+OP_COMMA on line 26, char 1 to 1
+OP_MINUS on line 27, char 1 to 1
+OP_DOT on line 28, char 1 to 1
+OP_DOTDOT on line 29, char 1 to 2
+OP_DIV on line 30, char 1 to 1
+SEMI on line 31, char 1 to 1
+OP_LESS on line 32, char 1 to 1
+EXCHANGE on line 33, char 1 to 3
+OP_LESSEQUAL on line 34, char 1 to 2
+ASSIGN on line 35, char 1 to 1
+OP_EQUAL on line 36, char 1 to 2
+OP_GREATER on line 37, char 1 to 1
+OP_GREATEREQUAL on line 38, char 1 to 2
+LBRAK on line 39, char 1 to 1
+RBRAK on line 40, char 1 to 1
+COMMENT value '*** numbers' on line 41, char 1 to 11
+INT_LIT value 0 on line 42, char 1 to 1
+INT_LIT value 0 on line 43, char 1 to 3
+INT_LIT value 30 on line 44, char 1 to 2
+INT_LIT value 47 on line 45, char 1 to 2
+COMMENT value '*** too large a value' on line 46, char 1 to 21
+47:1,22: integer larger than 32-bits: 9999999999999999999999 truncated to 843055103
+INT_LIT value 843055103 on line 47, char 1 to 22
+COMMENT value '*** you decide what to do with this: the number is long but not large' on line 48, char 1 to 69
+INT_LIT value 0 on line 49, char 1 to 22
+COMMENT value '*** ID' on line 50, char 1 to 6
+ID value '_' on line 51, char 1 to 1
+ID value 'a' on line 52, char 1 to 1
+ID value 'aa' on line 53, char 1 to 2
+ID value 'aba' on line 54, char 1 to 3
+ID value 'abdac' on line 55, char 1 to 5
+ID value '_I_am_ID' on line 56, char 1 to 8
+ID value '_I_might_be_considered_too_long' on line 57, char 1 to 31
+COMMENT value '*** OK to produce a warning here, or not to' on line 57, char 33 to 75
+COMMENT value '*** the ID below is DEFINITELY too long' on line 58, char 1 to 39
+59:1,93: identifier too long: 'this_is_a_definitely_way_too_long_ID_no_questions_about_it_yeah_yeah_yeah_yeah_yeah_yeah_yeah' truncated to 'this_is_a_definitely_way_too_lo'
+ID value 'this_is_a_definitely_way_too_lo' on line 59, char 1 to 93
