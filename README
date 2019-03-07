@@ -1,0 +1,16 @@
+
+Running the Code
+----------------
+
+The scanner code is in scan.py.
+
+Use python3 to run it as follows: python3 scan.py <input>
+
+<input> is an optional parameter that gives the filename to scan. If <input> is not given, the scanner will scan from stdin.
+
+Sample Input
+------------
+
+The sample inputs and their outputs are in the txt/ directory. The inputs are named *.txt and the outputs are the correspondingly named files with the *.out.txt extension.
+
+
