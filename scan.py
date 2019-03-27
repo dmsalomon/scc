@@ -12,6 +12,7 @@ class PlexToken:
         self.lineno = lineno
         self.begpos = begpos
         self.endpos = endpos
+        self.lexpos = begpos
 
     @classmethod
     def from_token(cls, t):
