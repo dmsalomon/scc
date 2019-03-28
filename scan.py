@@ -74,7 +74,6 @@ class Plexer:
         'OP_MINUS',
         'OP_MULT',
         'OP_DIV',
-        'COMMENT',
     ] + list(reserved.values())
 
     t_OP_DOTDOT         = r'\.\.'
@@ -99,7 +98,6 @@ class Plexer:
     t_OP_DIV            = r'\/'
 
     t_ignore_COMMENT    = r'\*\*\*.*$'
-
     t_ignore            = ' \t\v'
 
     # maximum identifier length is 31 characters long (like C)

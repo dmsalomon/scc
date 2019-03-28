@@ -1,7 +1,8 @@
 
-import ply.yacc as yacc
 import sys
+import io
 
+import ply.yacc as yacc
 from scan import Plexer
 
 
@@ -36,7 +37,6 @@ class Pparser:
         '''
         tuple-constructor : expr OP_COMMA expr
         '''
-        print('tuple-constructor', p.lineno(2), p.lexpos(2))
         pass
 
     def p_decl_var(p):
@@ -180,6 +180,8 @@ class Pparser:
         print(p)
 
     def __init__(self, src):
+        if isinstance(src, str):
+            src = io.StringIO(src)
         self.src = src
         self.lexer = Plexer(src)
         self.parser = yacc.yacc(module=type(self))
@@ -189,7 +191,6 @@ class Pparser:
 
 
 def main():
-    import io
     s = """
     x.3 = f[x],fd,((fd.3)) + fd[s], f(x);
     z = (5,k);
@@ -225,15 +226,15 @@ def main():
         return x;
     end defun
 
-    tuple tup = 1+1+1,2;
+    tuple tup = x[x[3]/2],1+1+1,2;
 
     if x,x > y,y then
         return x,x;
     end if
     """
-    n = Pparser(io.StringIO(s))
+    parser = Pparser(s)
     print(s, '.')
-    z = n.parse()
+    z = parser.parse()
 
 if __name__ == '__main__':
     main()
