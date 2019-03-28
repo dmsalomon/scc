@@ -19,7 +19,13 @@ class Pparser:
         pass
 
     def p_decl_array(p):
-        'decl : KW_ARRAY ID LBRAK expr OP_DOTDOT expr RBRAK set-expr SEMI'
+        'decl : KW_ARRAY ID LBRAK range RBRAK set-expr SEMI'
+        pass
+
+    def p_range(p):
+        '''
+        range : expr OP_DOTDOT expr
+        '''
         pass
 
     def p_decl_set_expr(p):
@@ -53,7 +59,7 @@ class Pparser:
     def p_func_args(p):
         '''
         args : ID
-             | args OP_COMMA ID
+             | ID OP_COMMA args
         '''
 
     def p_func_body(p):
@@ -95,7 +101,14 @@ class Pparser:
         pass
 
     def p_statement_for(p):
-        'statement : KW_FOREACH ID KW_IN ID KW_DO stmts KW_END KW_FOR'
+        'statement : KW_FOREACH ID KW_IN iterable KW_DO stmts KW_END KW_FOR'
+        pass
+
+    def p_iterable(p):
+        '''
+        iterable : range
+                 | ID
+        '''
         pass
 
     def p_statement_return(p):
@@ -210,6 +223,8 @@ def main():
         return x+4;
     elsif x >= 100 then
         return x-100;
+    elsif 1 == 1,1 then
+        return tr;
     else
         return tr;
     end if
@@ -217,6 +232,10 @@ def main():
     array x[21..43] = 4;
 
     global x = x[32+(2)];
+
+    foreach i in x.1+1..x.2-1 do
+        print i;
+    end for
 
     defun fib(n,m,o)
         local x = 0;
@@ -226,11 +245,22 @@ def main():
         return x;
     end defun
 
+    defun sin(x)
+        return cos(x-pi/2);
+    end defun
+
     tuple tup = x[x[3]/2],1+1+1,2;
 
     if x,x > y,y then
         return x,x;
     end if
+
+    defun main(argc, argv)
+        foreach i in 1..argc do
+            print argv[i];
+        end for
+        return 0;
+    end defun
     """
     parser = Pparser(s)
     print(s, '.')
