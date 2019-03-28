@@ -11,9 +11,9 @@ class Pparser:
 
     def p_prog(p):
         '''
-        prog : statement prog
-             | decl prog
-             | defn prog
+        prog : prog statement
+             | prog decl
+             | prog defn
              | empty
         '''
         pass
@@ -64,8 +64,8 @@ class Pparser:
 
     def p_func_body(p):
         '''
-        body : statement body
-             | decl body
+        body : body statement
+             | body decl
              | empty
         '''
         pass
@@ -120,7 +120,7 @@ class Pparser:
 
     def p_stmts(p):
         '''
-        stmts : statement stmts
+        stmts : stmts statement
               | empty
         '''
 
@@ -154,6 +154,7 @@ class Pparser:
             ('left', 'OP_COMMA'),
             ('left', 'OP_PLUS', 'OP_MINUS'),
             ('left', 'OP_MULT', 'OP_DIV'),
+            ('right', 'FUNC'),
     )
 
     def p_expr_tuple_constructor(p):
@@ -174,15 +175,22 @@ class Pparser:
         p[0] = p[2]
 
     def p_expr_unit(p):
-        'expr : INT_LIT'
+        '''
+        expr : INT_LIT
+             | ID
+        '''
         p[0] = p[1]
 
     def p_expr_func_call(p):
-        'expr : ID LPAR expr RPAR'
+        'expr : ID expr %prec FUNC'
         pass
 
-    def p_expr_lvalue(p):
-        'expr : lvalue'
+    def p_expr_tup_ref(p):
+        'expr : ID OP_DOT INT_LIT'
+        pass
+
+    def p_expr_array_index(p):
+        'expr : ID LBRAK expr RBRAK'
         pass
 
     def p_empty(p):
@@ -199,8 +207,8 @@ class Pparser:
         self.lexer = Plexer(src)
         self.parser = yacc.yacc(module=type(self))
 
-    def parse(self):
-        return self.parser.parse(lexer=self.lexer)
+    def parse(self, **kw):
+        return self.parser.parse(lexer=self.lexer, **kw)
 
 
 def main():
@@ -261,10 +269,12 @@ def main():
         end for
         return 0;
     end defun
+
+    print sin cos x;
     """
     parser = Pparser(s)
     print(s, '.')
-    z = parser.parse()
+    z = parser.parse(debug=True)
 
 if __name__ == '__main__':
     main()
