@@ -97,7 +97,8 @@ class Plexer:
     t_OP_MINUS          = r'-'
     t_OP_MULT           = r'\*'
     t_OP_DIV            = r'\/'
-    t_COMMENT           = r'\*\*\*.*$'
+
+    t_ignore_COMMENT    = r'\*\*\*.*$'
 
     t_ignore            = ' \t\v'
 
