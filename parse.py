@@ -32,8 +32,8 @@ class Pparser:
         p[0] = ('RANGE', p[1], p[3])
 
     def p_decl_set_expr(p):
-        'set-expr : ASSIGN expr'
-        p[0] = p[2]
+        'set-expr : id ASSIGN expr'
+        p[0] = ('ASSIGN', p[1], p[3])
 
     def p_decl_set_expr_empty(p):
         'set-expr : empty'
@@ -332,7 +332,7 @@ def main():
         return tr;
     end if
 
-    array x[1+21..43] = 4;
+    array x[1+21..43] i=i+2;
     array x[1+21..43];
 
     global x = x[32+(2)];
@@ -354,7 +354,7 @@ def main():
         return cos(x-pi/2);
     end defun
 
-    *** for engineers that trolls physicists
+    *** for engineers that troll physicists
     defun sin(x)
         return x;
     end defun
