@@ -306,83 +306,8 @@ def pprint(o, depth=0, indent=2):
 
 
 def main():
-    s = """
-    x.3 = f[x],fd,((fd.3)) + fd[s], f x;
-    z = (5,k);
-    tr = z;
-    print tr;
-
-    while x < 4 do
-        print x;
-        x = x + 1;
-    end while
-
-    ***t
-
-    if x == 4 then
-        return x;
-    elsif x == 5 then
-        return x+4;
-    elsif x >= 100 then
-        return x-100;
-    elsif 1 == 1,1 then
-        return tr;
-    elsif 10 == 10,10,10 then
-    else
-        return tr;
-    end if
-
-    array x[1+21..43] = 4;
-    array x[1+21..43];
-
-    global x = x[32+(2)];
-
-    foreach i in x.1+1..x.2-1 do
-        print i;
-        print (n/i);
-    end for
-
-    defun fib(n,m,o)
-        local x = 0;
-        while n < 100 do
-            x = x + sqrt(n-m-o);
-        end while
-        return x;
-    end defun
-
-    defun sin(x)
-        return cos(x-pi/2);
-    end defun
-
-    *** for engineers that trolls physicists
-    defun sin(x)
-        return x;
-    end defun
-
-    tuple tup = x[x[3]/2],1+1+1,2;
-
-    if x,x > y,y then
-        return x,x;
-    end if
-
-    defun main(argc, argv)
-        foreach i in 1..argc do
-            print argv[i];
-        end for
-        return 0;
-    end defun
-
-    local x = 7;
-
-    print(sin(cos(x)));
-    print sin cos x;
-    print sin cos x-pi/2;
-    print sin cos(x-pi/2);
-
-    a = ((((b)-3*4)));
-    a = ((((b)+(4*5))/6-a+b)-3);
-    """
-    parser = Pparser(s)
+    f = sys.stdin if len(sys.argv)<2 else open(sys.argv[1])
+    parser = Pparser(f)
 
     try:
         ast = parser.parse()
