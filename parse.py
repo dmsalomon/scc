@@ -1,6 +1,7 @@
 
 import io
 import sys
+import types
 
 import ply.yacc as yacc
 from scan import Plexer
@@ -20,6 +21,13 @@ class Pparser:
         else:
             p[0] = [p[2]]
 
+    def p_prog_error(p):
+        'prog : prog error'
+        if p[1]:
+            p[0] = [*p[1], 'ERROR']
+        else:
+            p[0] = ['ERROR']
+
     def p_prog_empty(p):
         'prog : empty'
 
@@ -38,17 +46,6 @@ class Pparser:
     def p_decl_set_expr_empty(p):
         'set-expr : empty'
 
-    def p_decl_tuple(p):
-        'decl : KW_TUPLE id ASSIGN tuple-constructor SEMI'
-        p[0] = ('TUPLE', p[2], p[4])
-
-    def p_tuple_constructor(p):
-        'tuple-constructor : expr OP_COMMA expr'
-        if isinstance(p[1], list):
-            p[0] = [*p[1], p[3]]
-        else:
-            p[0] = [p[1], p[3]]
-
     def p_decl_local(p):
         'decl : KW_LOCAL id ASSIGN expr SEMI'
         p[0] = ('LOCAL', p[2], p[4])
@@ -60,6 +57,10 @@ class Pparser:
     def p_func_defn(p):
         'defn : KW_DEFUN id LPAR args RPAR body KW_END KW_DEFUN'
         p[0] = ('DEFUN', p[2], p[4], p[6])
+
+    def p_func_defn_error(p):
+        'defn : KW_DEFUN error'
+        p[0] = 'ERROR'
 
     def p_func_args_id(p):
         'args : id'
@@ -147,6 +148,13 @@ class Pparser:
         else:
             p[0] = [p[2]]
 
+    def p_stmts_error(p):
+        'stmts : stmts error'
+        if p[1]:
+            p[0] = [*p[1], 'ERROR']
+        else:
+            p[0] = ['ERROR']
+
     def p_stmts_empty(p):
         'stmts : empty'
 
@@ -188,12 +196,15 @@ class Pparser:
             ('left', 'OP_COMMA'),
             ('left', 'OP_PLUS', 'OP_MINUS'),
             ('left', 'OP_MULT', 'OP_DIV'),
-            ('right', 'FUNC'),
+            ('right', 'CALL'),
     )
 
     def p_expr_tuple_constructor(p):
-        'expr : tuple-constructor'
-        p[0] = p[1]
+        'expr : expr OP_COMMA expr'
+        if isinstance(p[1], list):
+            p[0] = [*p[1], p[3]]
+        else:
+            p[0] = [p[1], p[3]]
 
     def p_expr_binop(p):
         '''
@@ -217,7 +228,7 @@ class Pparser:
         p[0] = p[1]
 
     def p_expr_func_call(p):
-        'expr : id expr %prec FUNC'
+        'expr : id expr %prec CALL'
         p[0] = ('CALL', p[1], p[2])
 
     def p_expr_tuple_ref(p):
@@ -248,27 +259,29 @@ class Pparser:
         'empty : '
         pass
 
-    def p_error(p):
-        p.parser.error = True
+    def p_error(self, p):
+        self.err = True
         if not p:
             print("SyntaxError: unexpected EOF")
             return
-
         print(f'Syntax Error: unexpected token {p.type} at {p.lineno}:{p.begpos},{p.endpos}')
 
     def __init__(self, src):
         if isinstance(src, str):
             src = io.StringIO(src)
         self.src = src
+        self.err = False
+        errorfunc = type(self).p_error
+        type(self).p_error = types.MethodType(type(self).p_error, self)
+
         self.parser = yacc.yacc(module=type(self))
-        self.lexer = Plexer(src, parser=self)
+        self.lexer = Plexer(src)
+        type(self).p_error = errorfunc
 
     def parse(self, **kw):
-        self.error = False
+        self.err = False
         ast = self.parser.parse(lexer=self.lexer, **kw)
-        if self.error:
-            raise SyntaxError
-        return ast
+        return ast, self.err
 
 
 def pprint(o, depth=0, indent=2):
@@ -309,12 +322,10 @@ def main():
     f = sys.stdin if len(sys.argv)<2 else open(sys.argv[1])
     parser = Pparser(f)
 
-    try:
-        ast = parser.parse()
-    except SyntaxError:
-        return 1
-    print("SUCCESS")
-    ast and pprint(ast, indent=2)
+    ast, err = parser.parse()
+    if not err:
+        print("SUCCESS")
+    pprint(ast, indent=2)
 
 if __name__ == '__main__':
     sys.exit(main() or 0)

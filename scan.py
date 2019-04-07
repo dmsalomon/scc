@@ -5,7 +5,7 @@ import ply.lex as lex
 import sys
 
 class PlexToken:
-    def __init__(self, _type, text, value, lineno, begpos, endpos, lexer=None):
+    def __init__(self, _type, text, value, lineno, begpos, endpos):
         self.type   = _type
         self.text   = text
         self.value  = value
@@ -13,11 +13,6 @@ class PlexToken:
         self.begpos = begpos
         self.endpos = endpos
         self.lexpos = begpos
-        self.lexer = lexer
-        if lexer:
-            self.parser = lexer.parser
-        else:
-            self.parser = None
 
     @classmethod
     def from_token(cls, t):
@@ -29,7 +24,6 @@ class PlexToken:
             t.lineno,
             t.lexpos+1,
             t.lexpos + len(text),
-            t.lexer,
         )
 
     def __repr__(self):
@@ -146,17 +140,15 @@ class Plexer:
             self.lexer.input(more)
             return self.lexer.token()
 
-    def __init__(self, src, parser=None, **kw):
+    def __init__(self, src, **kw):
         self.lexer = lex.lex(object=self, **kw)
         self.src = src
         self.lineno = 1
         self.tok = None
-        self.parser = parser
 
     def plextoken(self, t):
         if t:
             t.lineno = self.lineno
-            t.lexer = self
             return PlexToken.from_token(t)
         return t
 
