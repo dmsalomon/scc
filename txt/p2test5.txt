@@ -23,7 +23,7 @@ else
     return tr;
 end if
 
-array x[1+21..43] = 4;
+array x[1+21..43] i=43-i;
 array x[1+21..43];
 
 global x = x[32+(2)];

@@ -1,0 +1,3 @@
+[submodule "smaug"]
+	path = smaug
+	url = https://bitbucket.org/hzzzh/smaug
