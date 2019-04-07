@@ -123,8 +123,15 @@ class Pparser:
         'else : empty'
 
     def p_statement_for(p):
-        'statement : KW_FOREACH id KW_IN iterable KW_DO stmts KW_END KW_FOR'
+        'statement : KW_FOREACH id in iterable KW_DO stmts KW_END KW_FOR'
         p[0] = ('FOREACH', p[2], p[4], p[6])
+
+    def p_keywork_in(p):
+        '''
+        in : KW_IN
+           | ASSIGN
+        '''
+        p[0] = p[1]
 
     def p_iterable(p):
         '''
@@ -323,8 +330,11 @@ def main():
     parser = Pparser(f)
 
     ast, err = parser.parse()
-    if not err:
+    if err:
+        print("ERRORS")
+    else:
         print("SUCCESS")
+
     pprint(ast, indent=2)
 
 if __name__ == '__main__':

@@ -133,7 +133,13 @@ SUCCESS
       )
       INT:43
     )
-    INT:4
+    (ASSIGN
+      ID:i
+      (-
+        INT:43
+        ID:i
+      )
+    )
   )
   (ARRAY
     ID:x
@@ -249,7 +255,7 @@ SUCCESS
         ID:x
     ]
   )
-  (TUPLE
+  (GLOBAL
     ID:tup
     [
       (INDEX
