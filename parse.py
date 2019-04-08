@@ -84,6 +84,13 @@ class Pparser:
         else:
             p[0] = [p[2]]
 
+    def p_func_body_error(p):
+        'body : body error'
+        if p[1]:
+            p[0] = [*p[1], 'ERROR']
+        else:
+            p[0] = ['ERROR']
+
     def p_func_body_empty(p):
         'body : empty'
 
@@ -278,17 +285,16 @@ class Pparser:
             src = io.StringIO(src)
         self.src = src
         self.err = False
+
         errorfunc = type(self).p_error
         type(self).p_error = types.MethodType(type(self).p_error, self)
-
-        self.parser = yacc.yacc(module=type(self))
         self.lexer = Plexer(src)
+        self.parser = yacc.yacc(module=type(self))
         type(self).p_error = errorfunc
 
     def parse(self, **kw):
         self.err = False
-        ast = self.parser.parse(lexer=self.lexer, **kw)
-        return ast, self.err
+        return self.parser.parse(lexer=self.lexer, **kw), self.err
 
 
 def pprint(o, depth=0, indent=2):
