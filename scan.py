@@ -107,7 +107,7 @@ class Plexer:
         t.text = t.value
         if len(t.value) > 31:
             s = self.plextoken(t)
-            print(f"{s.lineno}:{s.begpos},{s.endpos}: identifier too long: '{t.value}' truncated to '{t.value[:31]}'")
+            print(f"{s.lineno}:{s.begpos},{s.endpos}: lexer: warn: identifier too long: '{t.value}' truncated to '{t.value[:31]}'")
             t.value = t.value[:31]
         return t
 
@@ -122,7 +122,7 @@ class Plexer:
             v = t.value
             t.value &= INT32_MAX
             tok = self.plextoken(t)
-            print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: integer larger than 32-bits: {v} truncated to {t.value}")
+            print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: lexer: warn: integer larger than 32-bits: {v} truncated to {t.value}")
         return t
 
     def t_newline(self, t):
@@ -131,7 +131,7 @@ class Plexer:
 
     def t_error(self, t):
         t = self.plextoken(t)
-        print(f"{t.lineno}:{t.begpos},{t.begpos}: invalid char: '{t.value[0]}'")
+        print(f"{t.lineno}:{t.begpos},{t.begpos}: lexer: warn: invalid char: '{t.value[0]}'")
         self.lexer.skip(1)
 
     def t_eof(self, t):
