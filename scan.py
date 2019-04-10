@@ -141,7 +141,7 @@ class Plexer:
             return self.lexer.token()
 
     def __init__(self, src, **kw):
-        self.lexer = lex.lex(object=self, **kw)
+        self.lexer = lex.lex(module=self, **kw)
         self.src = src
         self.lineno = 1
         self.tok = None
