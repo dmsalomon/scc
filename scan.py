@@ -161,15 +161,11 @@ class Plexer:
         self.lineno += 1
         if self.last and self.last.type not in self.nl_ignore:
             return t
-        self.last = t
 
     def t_SEMI(self, t):
         r';'
-        if not self.last:
+        if self.last and self.last.type not in self.term_ignore:
             return t
-        if self.last.type not in self.term_ignore:
-            return t
-        self.last = t
 
     def t_error(self, t):
         t = self.plextoken(t)
