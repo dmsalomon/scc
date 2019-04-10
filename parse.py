@@ -49,7 +49,7 @@ class Pparser:
         p[0] = ('GLOBAL', p[2], p[4])
 
     def p_func_defn(p):
-        'defn : KW_DEFUN id LPAR args RPAR opt-nl body KW_END'
+        'defn : KW_DEFUN id LPAR args RPAR body KW_END'
         p[0] = ('DEFUN', p[2], p[4], p[6])
 
     def p_func_args_id(p):
@@ -272,12 +272,6 @@ class Pparser:
              | SEMI
         '''
         p[0] = p[1]
-
-    def p_opt_nl(p):
-        '''
-        opt-nl : NL
-               | empty
-        '''
 
     def p_empty(p):
         'empty : '
