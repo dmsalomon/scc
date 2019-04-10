@@ -16,17 +16,11 @@ class Pparser:
              | prog decl
              | prog defn
         '''
-        if p[1]:
-            p[0] = [*p[1], p[2]]
-        else:
-            p[0] = [p[2]]
+        p[0] = [*(p[1] or []), p[2]]
 
     def p_prog_error(p):
         'prog : prog error'
-        if p[1]:
-            p[0] = [*p[1], 'ERROR']
-        else:
-            p[0] = ['ERROR']
+        p[0] = [*(p[1] or []), 'ERROR']
 
     def p_prog_empty(p):
         'prog : empty'
@@ -58,31 +52,20 @@ class Pparser:
         'defn : KW_DEFUN id LPAR args RPAR body KW_END KW_DEFUN'
         p[0] = ('DEFUN', p[2], p[4], p[6])
 
-    def p_func_defn_error(p):
-        'defn : KW_DEFUN error'
-        p[0] = 'ERROR'
-
     def p_func_args_id(p):
         'args : id'
-        p[0] = p[1]
+        p[0] = [p[1]]
 
     def p_func_args_list(p):
-        'args : id OP_COMMA args'
-        args = p[3]
-        if isinstance(args, list):
-            p[0] = [p[1], *args]
-        else:
-            p[0] = [p[1], args]
+        'args : args OP_COMMA id'
+        p[0] = [*p[1], p[3]]
 
     def p_func_body(p):
         '''
         body : body statement
              | body decl
         '''
-        if p[1]:
-            p[0] = [*p[1], p[2]]
-        else:
-            p[0] = [p[2]]
+        p[0] = [*(p[1] or []), p[2]]
 
     def p_func_body_error(p):
         'body : body error'
@@ -157,17 +140,11 @@ class Pparser:
 
     def p_stmts(p):
         'stmts : stmts statement'
-        if p[1]:
-            p[0] = [*p[1], p[2]]
-        else:
-            p[0] = [p[2]]
+        p[0] = [*(p[1] or []), p[2]]
 
     def p_stmts_error(p):
         'stmts : stmts error'
-        if p[1]:
-            p[0] = [*p[1], 'ERROR']
-        else:
-            p[0] = ['ERROR']
+        p[0] = [*(p[1] or []), 'ERROR']
 
     def p_stmts_empty(p):
         'stmts : empty'
@@ -275,10 +252,11 @@ class Pparser:
 
     def p_error(self, p):
         self.err = True
-        if not p:
-            print("SyntaxError: unexpected EOF")
-            return
-        print(f'Syntax Error: unexpected token {p.type} at {p.lineno}:{p.begpos},{p.endpos}')
+        print(f'{p.lineno}:{p.begpos},{p.endpos}: parser: error: ', end='')
+        if p:
+            print(f'unexpected `{p.value}`')
+        else:
+            print(f'unexpected EOF')
 
     def __init__(self, src):
         if isinstance(src, str):
@@ -297,6 +275,7 @@ class Pparser:
         return self.parser.parse(lexer=self.lexer, **kw), self.err
 
 
+# AST Pretty Printer
 def pprint(o, depth=0, indent=2):
     ind = lambda: print(' '*indent*depth, end='')
     if isinstance(o, list):
