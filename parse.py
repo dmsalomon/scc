@@ -252,7 +252,9 @@ class Pparser:
 
     def p_error(self, p):
         self.err = True
-        print(f'{p.lineno}:{p.begpos},{p.endpos}: parser: error: ', end='')
+        if p:
+            print(f'{p.lineno}:{p.begpos},{p.endpos}: ', end='')
+        print('parser: error: ', end='')
         if p:
             print(f'unexpected `{p.value}`')
         else:
