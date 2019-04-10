@@ -12,9 +12,9 @@ class Pparser:
 
     def p_prog(p):
         '''
-        prog : prog statement
-             | prog decl
-             | prog defn
+        prog : prog statement term
+             | prog decl term
+             | prog defn term
         '''
         p[0] = [*(p[1] or []), p[2]]
 
@@ -26,7 +26,7 @@ class Pparser:
         'prog : empty'
 
     def p_decl_array(p):
-        'decl : KW_ARRAY id LBRAK range RBRAK set-expr SEMI'
+        'decl : KW_ARRAY id LBRAK range RBRAK set-expr'
         p[0] = ('ARRAY', p[2], p[4], p[6])
 
     def p_range(p):
@@ -41,15 +41,15 @@ class Pparser:
         'set-expr : empty'
 
     def p_decl_local(p):
-        'decl : KW_LOCAL id ASSIGN expr SEMI'
+        'decl : KW_LOCAL id ASSIGN expr'
         p[0] = ('LOCAL', p[2], p[4])
 
     def p_decl_global(p):
-        'decl : KW_GLOBAL id ASSIGN expr SEMI'
+        'decl : KW_GLOBAL id ASSIGN expr'
         p[0] = ('GLOBAL', p[2], p[4])
 
     def p_func_defn(p):
-        'defn : KW_DEFUN id LPAR args RPAR body KW_END KW_DEFUN'
+        'defn : KW_DEFUN id LPAR args RPAR opt-nl body KW_END'
         p[0] = ('DEFUN', p[2], p[4], p[6])
 
     def p_func_args_id(p):
@@ -62,8 +62,8 @@ class Pparser:
 
     def p_func_body(p):
         '''
-        body : body statement
-             | body decl
+        body : body statement term
+             | body decl term
         '''
         p[0] = [*(p[1] or []), p[2]]
 
@@ -78,23 +78,37 @@ class Pparser:
         'body : empty'
 
     def p_statement_assign(p):
-        'statement : lhs ASSIGN expr SEMI'
+        'statement : lhs ASSIGN expr'
         p[0] = ('ASSIGN', p[1], p[3])
 
     def p_statement_exchange(p):
-        'statement : lhs EXCHANGE lhs SEMI'
+        'statement : lhs EXCHANGE lhs'
         p[0] = ('EXCHANGE', p[1], p[3])
 
     def p_statement_while(p):
-        'statement : KW_WHILE bool-expr KW_DO stmts KW_END KW_WHILE'
+        'statement : KW_WHILE bool-expr do stmts KW_END'
         p[0] = ('WHILE', p[2], p[4])
 
+    def p_do(p):
+        '''
+        do : term
+           | term KW_DO
+           | KW_DO
+        '''
+
     def p_statement_if(p):
-        'statement : KW_IF bool-expr KW_THEN stmts elsif else KW_END KW_IF'
+        'statement : KW_IF bool-expr then stmts elsif else KW_END'
         p[0] = ('IF', p[2], p[4], p[5], p[6])
 
+    def p_then(p):
+        '''
+        then : term
+             | term KW_THEN
+             | KW_THEN
+        '''
+
     def p_elsif_clause(p):
-        'elsif : KW_ELSIF bool-expr KW_THEN stmts elsif'
+        'elsif : KW_ELSIF bool-expr then stmts elsif'
         cur = ('ELSIF', p[2], p[4])
         elsif = p[5]
         if elsif:
@@ -113,8 +127,14 @@ class Pparser:
         'else : empty'
 
     def p_statement_for(p):
-        'statement : KW_FOREACH id in iterable KW_DO stmts KW_END KW_FOR'
+        'statement : for id in iterable do stmts KW_END'
         p[0] = ('FOREACH', p[2], p[4], p[6])
+
+    def p_for(p):
+        '''
+        for : KW_FOREACH
+            | KW_FOR
+        '''
 
     def p_keywork_in(p):
         '''
@@ -131,15 +151,15 @@ class Pparser:
         p[0] = p[1]
 
     def p_statement_return(p):
-        'statement : RETURN expr SEMI'
+        'statement : RETURN expr'
         p[0] = ('RETURN', p[2])
 
     def p_statement_print(p):
-        'statement : PRINT expr SEMI'
+        'statement : PRINT expr'
         p[0] = ('PRINT', p[2])
 
     def p_stmts(p):
-        'stmts : stmts statement'
+        'stmts : stmts statement term'
         p[0] = [*(p[1] or []), p[2]]
 
     def p_stmts_error(p):
@@ -245,6 +265,19 @@ class Pparser:
     def p_id(p):
         'id : ID'
         p[0] = ('ID', p[1])
+
+    def p_term(p):
+        '''
+        term : NL
+             | SEMI
+        '''
+        p[0] = p[1]
+
+    def p_opt_nl(p):
+        '''
+        opt-nl : NL
+               | empty
+        '''
 
     def p_empty(p):
         'empty : '

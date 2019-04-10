@@ -33,7 +33,6 @@ class PlexToken:
 class Plexer:
     reserved = {
         'array':    'KW_ARRAY',
-        'tuple':    'KW_TUPLE',
         'local':    'KW_LOCAL',
         'global':   'KW_GLOBAL',
         'defun':    'KW_DEFUN',
@@ -57,6 +56,7 @@ class Plexer:
         'LBRAK',
         'RBRAK',
         'SEMI',
+        'NL',
         'LPAR',
         'RPAR',
         'OP_COMMA',
@@ -79,7 +79,6 @@ class Plexer:
     t_OP_DOTDOT         = r'\.\.'
     t_LBRAK             = r'\['
     t_RBRAK             = r'\]'
-    t_SEMI              = r';'
     t_LPAR              = r'\('
     t_RPAR              = r'\)'
     t_OP_COMMA          = r','
@@ -125,9 +124,52 @@ class Plexer:
             print(f"{tok.lineno}:{tok.begpos},{tok.endpos}: lexer: warn: integer larger than 32-bits: {v} truncated to {t.value}")
         return t
 
-    def t_newline(self, t):
+    term_ignore = (
+            'NL',
+            'SEMI',
+            'KW_THEN',
+            'KW_DO',
+            'KW_ELSE',
+            'KW_ELSIF',
+    )
+
+    nl_ignore = (
+        *term_ignore,
+        'KW_IF',
+        'KW_WHILE',
+        'KW_FOREACH',
+        'LBRAK',
+        'LPAR',
+        'OP_COMMA',
+        'OP_DOT',
+        'ASSIGN',
+        'EXCHANGE',
+        'OP_LESS',
+        'OP_GREATER',
+        'OP_LESSEQUAL',
+        'OP_GREATEREQUAL',
+        'OP_EQUAL',
+        'OP_NOTEQUA',
+        'OP_PLUS',
+        'OP_MINUS',
+        'OP_MULT',
+        'OP_DIV',
+    )
+
+    def t_NL(self, t):
         r'\r\n?|\n'
         self.lineno += 1
+        if self.last and self.last.type not in self.nl_ignore:
+            return t
+        self.last = t
+
+    def t_SEMI(self, t):
+        r';'
+        if not self.last:
+            return t
+        if self.last.type not in self.term_ignore:
+            return t
+        self.last = t
 
     def t_error(self, t):
         t = self.plextoken(t)
@@ -145,6 +187,7 @@ class Plexer:
         self.src = src
         self.lineno = 1
         self.tok = None
+        self.last = None
 
     def plextoken(self, t):
         if t:
@@ -157,9 +200,10 @@ class Plexer:
 
     def next(self):
         if self.tok:
-            t, self.tok = self.tok, None
-            return t
-        return self.ntok()
+            self.last, self.tok = self.tok, None
+            return self.last
+        self.last = self.ntok()
+        return self.last
 
     token = next
 

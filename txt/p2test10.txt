@@ -7,7 +7,7 @@ print 123*231+(123/45);
 global a=10;
 print a*a;
 *** a function
-defun square (x) return x*x; end defun
+defun square (x) return x*x; end
 global b=12;
 print square(a)+square(b);
 *** actually, the following is also legal
@@ -31,13 +31,13 @@ foreach i in 1..9 do
   foreach j in 2..10 do
      if arr[i]>arr[j] then
         arr[i] <-> arr[j];
-     end if
-  end for
-end for
+     end
+  end
+end
 
 foreach i=1..10 do
    print arr[i];
-end for
+end
 
 *** now weird stuff... tuples
 *** note there's no "tuple" declaration any more
