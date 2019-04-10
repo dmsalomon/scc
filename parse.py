@@ -1,3 +1,5 @@
+# \file parse.py
+# \author Dov Salomon (dms833@nyu.edu)
 
 import io
 import sys
@@ -248,7 +250,6 @@ class Pparser:
 
     def p_empty(self, p):
         'empty : '
-        pass
 
     def p_error(self, p):
         self.err = True
