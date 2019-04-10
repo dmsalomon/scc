@@ -13,16 +13,16 @@ defun fib(x)
     count = 1;
     while count <= x do *** off by one error?
       a,b = b,a+b; *** make sure this is OK in the sematics of the language
-    end while
+    end
     return a;
-  end if
-end defun
+  end
+end
 
 *** test the function
 foreach c in 1 .. 10 do
   print c;
   print fib c;
-end for
+end
 
 *** now recursively
 defun fib_two (x)
@@ -34,11 +34,11 @@ defun fib_two (x)
     return 1;
   else *** x>1
     return fib_two(x-1)+fib_two(x-2);
-  end if
-end defun
+  end
+end
 
 *** test that
 foreach c in 1 .. 10 do
   print c;
   print fib_two c;
-end for
+end
