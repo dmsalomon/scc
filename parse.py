@@ -3,7 +3,6 @@
 
 import io
 import sys
-import types
 
 import ply.yacc as yacc
 from scan import Plexer
