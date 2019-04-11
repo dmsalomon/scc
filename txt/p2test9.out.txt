@@ -232,7 +232,9 @@ SUCCESS
   )
   (DEFUN
     ID:sin
-    ID:x
+    [
+      ID:x
+    ]
     [
       RETURN:
         (CALL
@@ -249,7 +251,9 @@ SUCCESS
   )
   (DEFUN
     ID:sin
-    ID:x
+    [
+      ID:x
+    ]
     [
       RETURN:
         ID:x

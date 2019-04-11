@@ -2,7 +2,9 @@ SUCCESS
 [
   (DEFUN
     ID:fib
-    ID:x
+    [
+      ID:x
+    ]
     [
       (IF
         (<
@@ -101,7 +103,9 @@ SUCCESS
   )
   (DEFUN
     ID:fib_two
-    ID:x
+    [
+      ID:x
+    ]
     [
       (IF
         (<

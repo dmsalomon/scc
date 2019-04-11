@@ -22,7 +22,9 @@ SUCCESS
     )
   (DEFUN
     ID:square
-    ID:x
+    [
+      ID:x
+    ]
     [
       RETURN:
         (*
