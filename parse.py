@@ -4,8 +4,10 @@
 import io
 import sys
 
+from collections import namedtuple
+
 import ply.yacc as yacc
-from scan import Plexer
+from scan import Plexer, PlexToken
 
 class Pparser:
     tokens = Plexer.tokens
@@ -27,31 +29,38 @@ class Pparser:
         'prog : empty'
 
     def p_decl_array(self, p):
-        'decl : KW_ARRAY id LBRAK range RBRAK set-expr SEMI'
-        p[0] = ('ARRAY', p[2], p[4], p[6])
+        'decl : ARRAY id LBRAK range RBRAK set-array SEMI'
+        p[0] = (p.slice[1], p[2], p[4], p[6])
 
     def p_range(self, p):
         'range : expr OP_DOTDOT expr'
         p[0] = ('RANGE', p[1], p[3])
 
-    def p_decl_set_expr(self, p):
-        'set-expr : id ASSIGN expr'
+    def p_decl_set_array(self, p):
+        'set-array : id ASSIGN expr'
         p[0] = ('ASSIGN', p[1], p[3])
 
-    def p_decl_set_expr_empty(self, p):
-        'set-expr : empty'
+    def p_decl_set_array_empty(self, p):
+        'set-array : empty'
 
     def p_decl_local(self, p):
-        'decl : KW_LOCAL id ASSIGN expr SEMI'
-        p[0] = ('LOCAL', p[2], p[4])
+        'decl : LOCAL id ASSIGN expr SEMI'
+        p[0] = (p.slice[1], p[2], p[4])
 
     def p_decl_global(self, p):
-        'decl : KW_GLOBAL id ASSIGN expr SEMI'
-        p[0] = ('GLOBAL', p[2], p[4])
+        'decl : GLOBAL id set-global SEMI'
+        p[0] = (p.slice[1], p[2], p[3])
+
+    def p_decl_set_global(self, p):
+        'set-global : ASSIGN expr'
+        p[0] = p[2]
+
+    def p_decl_set_global_empty(self, p):
+        'set-global : empty'
 
     def p_func_defn(self, p):
-        'defn : KW_DEFUN id LPAR args RPAR body KW_END KW_DEFUN'
-        p[0] = ('DEFUN', p[2], p[4], p[6])
+        'defn : DEFUN id LPAR args RPAR body END DEFUN'
+        p[0] = (p.slice[1], p[2], p[4], p[6])
 
     def p_func_args_id(self, p):
         'args : id'
@@ -80,23 +89,23 @@ class Pparser:
 
     def p_statement_assign(self, p):
         'statement : lhs ASSIGN expr SEMI'
-        p[0] = ('ASSIGN', p[1], p[3])
+        p[0] = (p.slice[2], p[1], p[3])
 
     def p_statement_exchange(self, p):
         'statement : lhs EXCHANGE lhs SEMI'
-        p[0] = ('EXCHANGE', p[1], p[3])
+        p[0] = (p.slice[2], p[1], p[3])
 
     def p_statement_while(self, p):
-        'statement : KW_WHILE bool-expr KW_DO stmts KW_END KW_WHILE'
-        p[0] = ('WHILE', p[2], p[4])
+        'statement : WHILE bool-expr DO stmts END WHILE'
+        p[0] = (p.slice[1], p[2], p[4])
 
     def p_statement_if(self, p):
-        'statement : KW_IF bool-expr KW_THEN stmts elsif else KW_END KW_IF'
-        p[0] = ('IF', p[2], p[4], p[5], p[6])
+        'statement : IF bool-expr THEN stmts elsif else END IF'
+        p[0] = (p.slice[1], p[2], p[4], p[5], p[6])
 
     def p_elsif_clause(self, p):
-        'elsif : KW_ELSIF bool-expr KW_THEN stmts elsif'
-        cur = ('ELSIF', p[2], p[4])
+        'elsif : ELSIF bool-expr THEN stmts elsif'
+        cur = (p.slice[1], p[2], p[4])
         elsif = p[5]
         if elsif:
             p[0] = [cur, *elsif]
@@ -107,19 +116,19 @@ class Pparser:
         'elsif : empty'
 
     def p_else_clause(self, p):
-        'else : KW_ELSE stmts'
-        p[0] = ('ELSE', p[2])
+        'else : ELSE stmts'
+        p[0] = (p.slice[1], p[2])
 
     def p_else_clause_empty(self, p):
         'else : empty'
 
     def p_statement_for(self, p):
-        'statement : KW_FOREACH id in iterable KW_DO stmts KW_END KW_FOR'
-        p[0] = ('FOREACH', p[2], p[4], p[6])
+        'statement : FOREACH id in iterable DO stmts END FOR'
+        p[0] = (p.slice[1], p[2], p[4], p[6])
 
     def p_keywork_in(self, p):
         '''
-        in : KW_IN
+        in : IN
            | ASSIGN
         '''
         p[0] = p[1]
@@ -133,11 +142,11 @@ class Pparser:
 
     def p_statement_return(self, p):
         'statement : RETURN expr SEMI'
-        p[0] = ('RETURN', p[2])
+        p[0] = (p.slice[1], p[2])
 
     def p_statement_print(self, p):
         'statement : PRINT expr SEMI'
-        p[0] = ('PRINT', p[2])
+        p[0] = (p.slice[1], p[2])
 
     def p_stmts(self, p):
         'stmts : stmts statement'
@@ -241,11 +250,11 @@ class Pparser:
 
     def p_int(self, p):
         'int : INT_LIT'
-        p[0] = ('INT', p[1])
+        p[0] = p.slice[1]
 
     def p_id(self, p):
         'id : ID'
-        p[0] = ('ID', p[1])
+        p[0] = p.slice[1]
 
     def p_empty(self, p):
         'empty : '
@@ -288,10 +297,9 @@ def pprint(o, depth=0, indent=2):
         if len(o) == 1:
             pprint(o[0], depth, indent)
         elif len(o) == 2:
-            ind()
-            print(o[0], end='')
+            pprint(o[0], depth, indent)
             print(':', end='')
-            if isinstance(o[1], list) or isinstance(o[1], tuple):
+            if isinstance(o[1], (list, tuple, PlexToken)):
                 print()
                 pprint(o[1], depth+1, indent)
             else:
@@ -299,11 +307,20 @@ def pprint(o, depth=0, indent=2):
         else:
             ind()
             print('(', end='')
-            print(o[0])
+            if isinstance(o[0], PlexToken):
+                print(o[0].type)
+            else:
+                print(o[0])
             for i in range(1, len(o)):
                 pprint(o[i], depth+1, indent)
             ind()
             print(')')
+    elif isinstance(o, PlexToken):
+        ind()
+        print(o.type, end='')
+        if o.type in ('INT_LIT', 'ID'):
+            print(':', end='')
+            print(o.value)
     else:
         ind()
         print(o)
