@@ -1,7 +1,7 @@
 
-
 import sys
 
+from copy import copy, deepcopy
 from enum import Enum, auto
 from inspect import isclass
 
@@ -128,10 +128,12 @@ class PChecker:
         if self.compatible(val, (IntLit, Scalar)):
             rec = Scalar(tok)
         elif self.compatible(val, Tuple):
-            rec = val
+            if val.n < 0:
+                rec = val.link()
+            else:
+                rec = deepcopy(val)
+                rec.dep = val.dep
             rec.tok = tok
-        elif self.compatible(val, Undefined):
-            rec = Undefined(tok=tok)
         else:
             rec = val
 
@@ -163,10 +165,12 @@ class PChecker:
         if self.compatible(val, (IntLit, Scalar)):
             rec = Scalar(tok)
         elif self.compatible(val, Tuple):
-            rec = val
+            if val.n < 0:
+                rec = val.link()
+            else:
+                rec = deepcopy(val)
+                rec.dep = val.dep
             rec.tok = tok
-        elif self.compatible(val, Undefined):
-            rec = Undefined(tok=tok)
         else:
             rec = val
 
@@ -224,11 +228,16 @@ class PChecker:
             if self.compatible(e, Array):
                 self.err(f'{kw}: cannot return array {e.tok} from function')
                 return
-            if self.compatible(rettype, Undefined):
-                self.func.rettype = e
-            elif (not self.compatible(e, rettype) or
+
+            if self.compatible(rettype, Fret):
+                if self.compatible(e, Tuple) and e.n < 0:
+                    e = e.link()
+                rettype = rettype.resolve(e)
+
+            if (not self.compatible(e, rettype) or
                     self.compatible(e, Tuple) and rettype.n > 0 and e.n != rettype.n):
                     self.err(f'{kw}: previously returned {rettype}')
+
         except SyntaxError as err:
             self.err(f'in {kw}:', err)
 
@@ -258,12 +267,18 @@ class PChecker:
                 self.err(f'in {kw}: assigning non-tuple to tuple')
             elif lhs.n < 0 and rhs.n > 0:
                 self.log(f'in {kw}: infering size of {lhs.tok} to be {rhs.n}')
-                lhs.n = rhs.n
+                lhs.resolve(rhs.n)
             elif lhs.n > 0 and rhs.n < 0:
                 self.log(f'in {kw}: infering size of {rhs.tok} to be {lhs.n}')
-                rhs.n = lhs.n
+                rhs.resolve(lhs.n)
             elif lhs.n != rhs.n:
                 self.err(f'in {kw}: mismatched lengths')
+
+        if self.compatible(lhs, Fret) and not self.compatible(rhs, Fret):
+            lhs = lhs.resolve(rhs)
+        elif not self.compatible(lhs, Fret) and self.compatible(rhs, Fret):
+            if lhs.tok:
+                rhs.link(self.localsym, lhs.tok)
 
     def ifstmt(self, s):
         kw, b, sx, ei, els = s
@@ -348,7 +363,7 @@ class PChecker:
                         fields = field.n
                         break
                     fields += field.n
-                elif self.compatible(field, Undefined):
+                elif self.compatible(field, Fret):
                     fields = -1
                     break
                 else:
@@ -362,13 +377,11 @@ class PChecker:
             l = self.expr(e[1])
             r = self.expr(e[2])
 
-            if self.compatible(l, Undefined):
-                l = Scalar(tok=l.tok)
-                self.symput(l.tok.value, l)
+            if self.compatible(l, Fret):
+                l = l.resolve(Scalar())
 
-            if self.compatible(r, Undefined):
-                r = Scalar(tok=r.tok)
-                self.symput(r.tok.value, r)
+            if self.compatible(r, Fret):
+                r = r.resolve(Scalar())
 
             if not (
                 self.compatible(l, (IntLit, Scalar)) and
@@ -387,10 +400,8 @@ class PChecker:
             if not self.compatible(d, Array):
                 raise(f'{d.tok} is not array: cannot be indexed')
 
-            if self.compatible(index, Undefined):
-                n = index.tok.value
-                index = Scalar(tok=index.tok)
-                self.symput(n, index)
+            if self.compatible(index, Fret):
+                index = index.resolve(Scalar())
 
             if not self.compatible(index, (Scalar, IntLit)):
                 raise(f'cannot reference array {d.tok} with non-integer expression')
@@ -408,7 +419,7 @@ class PChecker:
                 raise SyntaxError(f'cannot reference non-tuple {d.tok}')
 
             if d.n < 0:
-                d.n = -field
+                d.resolve(-field)
 
             if d.n > 0 and field > d.n:
                 raise SyntaxError(f'cannot reference tuple {d.tok} (size {d.n}) at {field}')
@@ -433,7 +444,7 @@ class PChecker:
                 if self.compatible(args, Tuple):
                     passed = args.n
                     if passed < 0 and args.tok:
-                        args.n = func.arg.n
+                        args.resolve(func.arg.n)
                 if passed > 0 and passed != func.arg.n:
                     raise SyntaxError(f'pass incorrect number of args to {f}')
             else:
@@ -444,7 +455,10 @@ class PChecker:
                     if passed < -func.arg.n:
                         raise SyntaxError(f'passing too few args to {f}')
                     else:
-                        func.arg.n = passed
+                        func.arg.resolve(passed)
+                else:
+                    if len(func.arg.dep) < 2:
+                        func.arg = args.link()
 
             nargs = f"({'ambiguous' if passed < 0 else passed})"
             self.log(f'calling function {func.tok} with {nargs} args {args}')
@@ -454,6 +468,8 @@ class PChecker:
         kw, e = t
         try:
             e = self.expr(e)
+            if self.compatible(e, Fret):
+                e = e.resolve(Scalar())
             if not self.compatible(e, (IntLit, Scalar)):
                 raise SyntaxError('cannot print not integer expression')
         except SyntaxError as err:
@@ -539,10 +555,39 @@ class Undefined:
         return f'Undefined(tok={self.tok})'
 
 class Fret:
-    def __init__(self, f=None):
+    def __init__(self, f):
         self.f = f
+        self.dep = [self]
+        self.dec = False
+
+    def link(self, sym, tok):
+        fr = Fret(f=self.f)
+        fr.dec = True
+        fr.dep = self.dep
+        self.sym = sym
+        self.tok = tok
+        self.dep.append(fr)
+
     def __repr__(self):
         return f'Fret(f={self.f.tok})'
+
+    def resolve(self, rec):
+        mine = None
+        for fr in self.dep:
+            ret = fr.establish(rec)
+            if fr is self:
+                mine = ret
+        return mine
+
+    def establish(self, rec):
+        if self.dec:
+            name = tok.value
+            rec.tok.value = name
+            sym[name] = rec
+        else:
+            rec.tok = None
+            self.f.rettype = rec
+        return rec
 
 class Uninitialized:
     def __init__(self, tok=None):
@@ -561,8 +606,23 @@ class Tuple:
         self.n = n
         self.ast = ast
         self.tok = tok
+        self.dep = [self]
+
+    def link(self):
+        t = Tuple(n=self.n,tok=None)
+        t.dep = self.dep
+        self.dep.append(t)
+        return t
+
+    def resolve(self, n):
+        for t in self.dep:
+            t.n = n
+            print(t)
+
     def __repr__(self):
-        return f'Tuple(tok={self.tok},n={self.n})'
+        nlinks = len(self.dep)
+        nlinks = nlinks if nlinks > 1 else ""
+        return f'Tuple(tok={self.tok},n={self.n},links={nlinks})'
 
 class Array:
     def __init__(self, lo, hi, tok):
@@ -573,12 +633,12 @@ class Array:
         return f'Array(tok={self.tok},lo={self.lo},hi={self.hi})'
 
 class Func:
-    def __init__(self, arg, rettype, sym, ast, tok):
+    def __init__(self, arg, sym, ast, tok):
         self.arg = arg
-        self.rettype = rettype
         self.sym = sym
         self.ast = ast
         self.tok = tok
+        self.rettype = None
     def __repr__(self):
         return f'Func(tok={self.tok},arg={self.arg},rettype={self.rettype},sym={self.sym})'
 

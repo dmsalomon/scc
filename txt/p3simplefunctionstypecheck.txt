@@ -65,12 +65,12 @@ end defun
 print sum_pair_two_or_more(1,2); *** OK: can use THIS LINE to deduce that t is a pair and return value is int
 print sum_pair_two_or_more(i,i+2); *** OK
 *** but annoyiningly, if the above two lines were NOT there, the following would be OK:
-print sum(i,i+1,i+2); *** Not OK, but would be OK without the above two calls.
-print sum(a,1); *** error in comma
-print sum t; *** error size of tuple: t is a triple, sum wants a pair
+print sum_pair_two_or_more(i,i+1,i+2); *** Not OK, but would be OK without the above two calls.
+print sum_pair_two_or_more(a,1); *** error in comma
+print sum_pair_two_or_more t; *** error size of tuple: t is a triple, sum wants a pair
 print sum (0,1,2); *** same here
 
 *** Checking that the function RESULT is used correctly
-t = sum(1,2); *** type mismatch on return
+t = sum_pair_two_or_more(1,2); *** type mismatch on return
 
 
