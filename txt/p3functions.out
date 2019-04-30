@@ -1,0 +1,59 @@
+declared global var Token(ID,i,'i',4,8,8)
+declared global var Token(ID,t,'t',5,8,8)
+declared global var Token(ID,a,'a',6,8,8)
+declaring array Array(tok=Token(ID,a,'a',7,7,7),lo=1,hi=10)
+using global variable Token(ID,a,'a',13,10,10) in Token(ID,f,'f',12,7,7)
+using variable Token(ID,a,'a',14,10,10) declared at Token(ID,a,'a',7,7,7)
+err: Token(RETURN,return,'return',14,3,8): cannot return array Token(ID,a,'a',7,7,7) from function
+declared function Func(tok=Token(ID,f,'f',12,7,7),arg=Tuple(tok=Token(ID,t,'t',12,9,9),n=-1,links=),rettype=Fret(f=Token(ID,f,'f',12,7,7)),sym={'t': Tuple(tok=Token(ID,t,'t',12,9,9),n=-1,links=), 'a': Array(tok=Token(ID,a,'a',7,7,7),lo=1,hi=10)})
+err: Token(RETURN,return,'return',24,5,10): previously returned Tuple(tok=None,n=2,links=)
+declared function Func(tok=Token(ID,ff,'ff',20,7,8),arg=Tuple(tok=Token(ID,t,'t',20,10,10),n=-1,links=),rettype=Tuple(tok=None,n=2,links=),sym={'t': Tuple(tok=Token(ID,t,'t',20,10,10),n=-1,links=)})
+declared local variable Token(ID,j,'j',30,9,9)
+using variable Token(ID,j,'j',32,5,5) declared at Token(ID,j,'j',30,9,9)
+using variable Token(ID,t,'t',33,5,5) declared at Token(ID,t,'t',29,11,11)
+in Token(ASSIGN,=,'=',33,6,6): infering size of Token(ID,t,'t',29,11,11) to be 2
+Tuple(tok=Token(ID,t,'t',29,11,11),n=2,links=)
+using variable Token(ID,t,'t',35,5,5) declared at Token(ID,t,'t',29,11,11)
+using variable Token(ID,j,'j',35,7,7) declared at Token(ID,j,'j',30,9,9)
+err: in Token(ASSIGN,=,'=',35,6,6): assigning non-tuple to tuple
+using variable Token(ID,t,'t',37,5,5) declared at Token(ID,t,'t',29,11,11)
+err: in Token(ASSIGN,=,'=',37,6,6): mismatched lengths
+declared function Func(tok=Token(ID,fff,'fff',29,7,9),arg=Tuple(tok=Token(ID,t,'t',29,11,11),n=2,links=),rettype=Fret(f=Token(ID,fff,'fff',29,7,9)),sym={'t': Tuple(tok=Token(ID,t,'t',29,11,11),n=2,links=), 'j': Scalar(tok=Token(ID,j,'j',30,9,9))})
+err: implementation restriction: functions can only have one formal parameter
+declared local variable Token(ID,a,'a',53,9,9)
+declared local variable Token(ID,b,'b',54,9,9)
+using variable Token(ID,a,'a',55,3,3) declared at Token(ID,a,'a',53,9,9)
+using variable Token(ID,b,'b',55,6,6) declared at Token(ID,b,'b',54,9,9)
+using variable Token(ID,t,'t',55,10,10) declared at Token(ID,t,'t',52,16,16)
+in Token(ASSIGN,=,'=',55,8,8): infering size of Token(ID,t,'t',52,16,16) to be 2
+Tuple(tok=Token(ID,t,'t',52,16,16),n=2,links=)
+using variable Token(ID,a,'a',56,10,10) declared at Token(ID,a,'a',53,9,9)
+using variable Token(ID,b,'b',56,12,12) declared at Token(ID,b,'b',54,9,9)
+declared function Func(tok=Token(ID,sum_pair,'sum_pair',52,7,14),arg=Tuple(tok=Token(ID,t,'t',52,16,16),n=2,links=),rettype=Scalar(tok=None),sym={'t': Tuple(tok=Token(ID,t,'t',52,16,16),n=2,links=), 'a': Scalar(tok=Token(ID,a,'a',53,9,9)), 'b': Scalar(tok=Token(ID,b,'b',54,9,9))})
+Tuple(tok=Token(ID,t,'t',60,28,28),n=-1,links=)
+referencing tuple Token(ID,t,'t',60,28,28) at 1
+Tuple(tok=Token(ID,t,'t',60,28,28),n=-2,links=)
+referencing tuple Token(ID,t,'t',60,28,28) at 2
+declared function Func(tok=Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',60,7,26),arg=Tuple(tok=Token(ID,t,'t',60,28,28),n=-2,links=),rettype=Scalar(tok=None),sym={'t': Tuple(tok=Token(ID,t,'t',60,28,28),n=-2,links=)})
+Tuple(tok=Token(ID,t,'t',60,28,28),n=2,links=)
+calling function Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',60,7,26) with (2) args Tuple(tok=None,n=2,links=)
+using variable Token(ID,i,'i',66,28,28) declared at Token(ID,i,'i',4,8,8)
+using variable Token(ID,i,'i',66,30,30) declared at Token(ID,i,'i',4,8,8)
+calling function Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',60,7,26) with (2) args Tuple(tok=None,n=2,links=)
+using variable Token(ID,i,'i',68,28,28) declared at Token(ID,i,'i',4,8,8)
+using variable Token(ID,i,'i',68,30,30) declared at Token(ID,i,'i',4,8,8)
+using variable Token(ID,i,'i',68,34,34) declared at Token(ID,i,'i',4,8,8)
+err: in Token(PRINT,print,'print',68,1,5) pass incorrect number of args to Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',68,7,26)
+using variable Token(ID,a,'a',69,28,28) declared at Token(ID,a,'a',7,7,7)
+err: in Token(PRINT,print,'print',69,1,5) invalid tuple item Array(tok=Token(ID,a,'a',7,7,7),lo=1,hi=10)
+using variable Token(ID,t,'t',70,28,28) declared at Token(ID,t,'t',5,8,8)
+err: in Token(PRINT,print,'print',70,1,5) pass incorrect number of args to Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',70,7,26)
+err: in Token(PRINT,print,'print',71,1,5) no such variable sum
+using variable Token(ID,t,'t',74,1,1) declared at Token(ID,t,'t',5,8,8)
+calling function Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',60,7,26) with (2) args Tuple(tok=None,n=2,links=)
+err: in Token(ASSIGN,=,'=',74,3,3): assigning non-tuple to tuple
+symbol table: {'i': Scalar(tok=Token(ID,i,'i',4,8,8)), 't': Tuple(tok=Token(ID,t,'t',5,8,8),n=3,links=), 'a': Array(tok=Token(ID,a,'a',7,7,7),lo=1,hi=10), 'f': Func(tok=Token(ID,f,'f',12,7,7),arg=Tuple(tok=Token(ID,t,'t',12,9,9),n=-1,links=),rettype=Fret(f=Token(ID,f,'f',12,7,7)),sym={'t': Tuple(tok=Token(ID,t,'t',12,9,9),n=-1,links=), 'a': Array(tok=Token(ID,a,'a',7,7,7),lo=1,hi=10)}), 'ff': Func(tok=Token(ID,ff,'ff',20,7,8),arg=Tuple(tok=Token(ID,t,'t',20,10,10),n=-1,links=),rettype=Tuple(tok=None,n=2,links=),sym={'t': Tuple(tok=Token(ID,t,'t',20,10,10),n=-1,links=)}), 'fff': Func(tok=Token(ID,fff,'fff',29,7,9),arg=Tuple(tok=Token(ID,t,'t',29,11,11),n=2,links=),rettype=Fret(f=Token(ID,fff,'fff',29,7,9)),sym={'t': Tuple(tok=Token(ID,t,'t',29,11,11),n=2,links=), 'j': Scalar(tok=Token(ID,j,'j',30,9,9))}), 'sum_pair': Func(tok=Token(ID,sum_pair,'sum_pair',52,7,14),arg=Tuple(tok=Token(ID,t,'t',52,16,16),n=2,links=),rettype=Scalar(tok=None),sym={'t': Tuple(tok=Token(ID,t,'t',52,16,16),n=2,links=), 'a': Scalar(tok=Token(ID,a,'a',53,9,9)), 'b': Scalar(tok=Token(ID,b,'b',54,9,9))}), 'sum_pair_two_or_more': Func(tok=Token(ID,sum_pair_two_or_more,'sum_pair_two_or_more',60,7,26),arg=Tuple(tok=Token(ID,t,'t',60,28,28),n=2,links=),rettype=Scalar(tok=None),sym={'t': Tuple(tok=Token(ID,t,'t',60,28,28),n=2,links=)})}
+err: number of arguments to Token(ID,f,'f',12,7,7) remains unknown
+err: return type of Token(ID,f,'f',12,7,7) remains unknown
+err: number of arguments to Token(ID,ff,'ff',20,7,8) remains unknown
+err: return type of Token(ID,fff,'fff',29,7,9) remains unknown
