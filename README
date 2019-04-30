@@ -1,68 +1,15 @@
 
 Dov Salomon (dms833@nyu.edu)
 
-----------------------
-| Running the Parser |
-----------------------
+-----------------------
+| Running the Checker |
+-----------------------
 
-The parser code is in parse.py.
-Use python3 to run it as follows: python3 parse.py <input>
-<input> is an optional parameter that gives the filename to parse. If <input> is not given, the parser will parse from stdin. If using stdin, give <eof> (using <ctrl-d> on unix) to end input.
+The code is in check.py.
+Use python3 to run it as follows: python3 check.py <input>
+<input> is an optional parameter that gives the filename to check. If <input> is not given, the parser will parse from stdin. If using stdin, give <eof> (using <ctrl-d> on unix) to end input.
 
 If an error is encountered while parsing, the parser will immediately report the error to stdout by specifying the offending token (or complaining that <eof> arrived unexpectedly).
-
-After parsing the entire input, the parser will print SUCCESS if no errors were encountered, otherwise it will print ERRORS.
-
-The parser will then print the AST to stdout.
-
---------------
-| AST Format |
---------------
-
-For simplicity, the AST has a generic format that follows some basic rules:
-
-  * Fixed length items are represented as a tuple of the form (OP, ...)
-
-    example 1: expr1 + expr2 => (+, expr1, expr2),
-                            where each expr is a sub AST
-
-    example 2: id expr => (CALL, id, expr), which encodes the function call.
-                            where expr is a sub AST.
-
-    example 3: defun name (arguments) body end defun
-                   => (DEFUN, name, arguments, body)
-
-        Each of components name, arguments and body are themselves AST's
-        that encode the information for those elements.
-
-        A function definition is fixed length in the sense that it has a
-        fixed number of ingredients (function name, argument list, body),
-        as opposed to a tuple which is any number of comma separated
-        expressions.
-
-
-  * Variable length items (such as statement lists, function bodies,
-    tuples, and function argument lists) are represented as vectors.
-
-    example:
-    t = 1,2,3,4
-                => (ASSIGN
-                       ID:t
-                       [
-                         INT:1
-                         INT:2
-                         INT:3
-                         INT:4
-                       ]
-                   )
-
-        (The elements inside the [ ] are in a vector/python list).
-
-    (ideally these would be represented as linked lists for performance).
-
-This generic structure was chosen (instead of creating special classes to
-represent each kind of statement and expression type) so that tree walking
-is simplified.
 
 -----------------
 | Sample Inputs |
@@ -71,4 +18,4 @@ is simplified.
 The sample inputs and their outputs are in the txt/ directory. The inputs are named *.txt and the outputs are the correspondingly named files with the *.out.txt extension.
 
 -------
-vim:et:tw=2:sw=2:sts=2:
+vim:et:ts=2:sw=2:sts=2:
