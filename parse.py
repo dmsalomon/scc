@@ -44,19 +44,19 @@ class Pparser:
         'set-array : empty'
 
     def p_decl_local(self, p):
-        'decl : LOCAL id ASSIGN expr SEMI'
-        p[0] = (p.slice[1], p[2], p[4])
+        'decl : LOCAL id opt-assign SEMI'
+        p[0] = (p.slice[1], p[2], p[3])
 
     def p_decl_global(self, p):
-        'decl : GLOBAL id set-global SEMI'
+        'decl : GLOBAL id opt-assign SEMI'
         p[0] = (p.slice[1], p[2], p[3])
 
     def p_decl_set_global(self, p):
-        'set-global : ASSIGN expr'
+        'opt-assign : ASSIGN expr'
         p[0] = p[2]
 
     def p_decl_set_global_empty(self, p):
-        'set-global : empty'
+        'opt-assign : empty'
 
     def p_func_defn(self, p):
         'defn : DEFUN id LPAR args RPAR body END DEFUN'
