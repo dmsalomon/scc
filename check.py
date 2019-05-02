@@ -64,7 +64,7 @@ class PChecker:
             f(s)
 
     def arraydecl(self, decl):
-        _, tok, r, _ = decl
+        _, tok, r, se = decl
         name = tok.value
         arr = self.localsym
 
@@ -81,7 +81,18 @@ class PChecker:
             self.err(f'when parsing range for {tok}:', err)
             return
 
-        # TODO set expression
+        if se:
+            _, itok, e = se
+            name = itok.value
+            if name in self.localsym:
+                self.err(f'set-expr for {tok}: {itok} already in use')
+            else:
+                ind = Scalar(tok=itok)
+                self.localsym[name] = ind
+                e = self.expr(e)
+                if not self.compatible(e, Scalar):
+                    self.err(f'set-expr for {tok}: expression must be int')
+
         a = Array(lo=lo, hi=hi, tok=tok)
         self.localsym[name] = a
         self.log(f'declaring array {a}')
@@ -92,7 +103,13 @@ class PChecker:
         t2 = self.expr(e2)
         if not (self.compatible(t1, IntLit) and self.compatible(t2, IntLit)):
             raise SyntaxError('range endpoints must be constants')
-        return t1.tok.value, t2.tok.value
+        lo = t1.tok.value
+        hi = t2.tok.value
+
+        if lo > hi:
+            raise SyntaxError('lo > hi')
+
+        return lo,hi
 
     def globaldecl(self, decl):
         kw, tok, expr = decl
