@@ -634,7 +634,6 @@ class Tuple:
     def resolve(self, n):
         for t in self.dep:
             t.n = n
-            print(t)
 
     def __repr__(self):
         nlinks = len(self.dep)
