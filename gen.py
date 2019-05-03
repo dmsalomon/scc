@@ -10,9 +10,6 @@ i32 = ir.IntType(32)
 i32p = i32.as_pointer()
 charptr = ir.IntType(8).as_pointer()
 
-def structy(n):
-    return ir.LiteralStructType([i32]*n)
-
 class PGen:
     def __init__(self, checker):
         self.c = checker
@@ -46,7 +43,7 @@ class PGen:
                 t = i32
             elif self.c.compatible(typ, Tuple):
                 n = typ.n
-                t = structy(n)
+                t = ir.ArrayType(i32, n)
             elif self.c.compatible(typ, Array):
                 sz = typ.hi - typ.lo + 1
                 assert(sz > 0)
@@ -91,7 +88,7 @@ class PGen:
             assert(nargs > 0)
             ret = f.rettype
 
-            arg = structy(nargs)
+            arg = ir.ArrayType(i32, nargs)
 
             if self.c.compatible(ret, Scalar):
                 ret = i32
@@ -231,7 +228,11 @@ class PGen:
 
         v = self.load(expr)
         g = self.gx[tok.value]
-        self.builder.store(v, g)
+
+        if self.memsize(v):
+            self.memcpy(g, v)
+        else:
+            self.builder.store(v, g)
 
     def arraydecl(self, decl):
         _, arr, r, se = decl
@@ -272,19 +273,37 @@ class PGen:
     def assign(self, s):
         _, lhs, rhs = s
 
-        loc = self.expr(lhs)
-        val = self.load(rhs)
-        self.builder.store(val, loc)
+        if isinstance(lhs, list):
+            loc = [self.expr(i) for i in lhs]
+        else:
+            loc = self.expr(lhs)
+        val = self.loadvalue(rhs)
+        print(val)
+
+
+        if self.memsize(val) > 1:
+            print(lhs)
+            self.memcpy(loc, val)
+        else:
+            self.builder.store(val, loc)
 
     def exchange(self, s):
         _, lhs, rhs = s
 
-        lloc = self.expr(lhs)
-        lval = self.load(lhs)
-        rloc = self.expr(rhs)
-        rval = self.load(rhs)
-        self.builder.store(rval, lloc)
-        self.builder.store(lval, rloc)
+        if isinstance(lhs, list):
+            lloc = [self.expr(i) for i in lhs]
+        else:
+            lloc = self.expr(lhs)
+
+        if isinstance(rhs, list):
+            rloc = [self.expr(i) for i in rhs]
+        else:
+            rloc = self.expr(rhs)
+
+        rval = self.loadvalue(rhs)
+        lval = self.loadvalue(lhs)
+        self.memcpy(rloc, lval)
+        self.memcpy(lloc, rval)
 
     def range(self, r):
         _, el, er = r
@@ -292,13 +311,75 @@ class PGen:
         vr = self.load(er)
         return vl, vr
 
+    def memsize(self, v):
+        tp = v.type
+        if not isinstance(tp, ir.PointerType):
+            return 0
+
+        if isinstance(tp.pointee, ir.ArrayType):
+            return tp.pointee.count
+        else:
+            return 1
+
+    def memcpy(self, dst, src, n=None):
+        if n is None:
+            n = self.memsize(src)
+
+        if isinstance(dst, list):
+            l = 0
+            for d in dst:
+                t = self.memsize(d)
+                if t:
+                    l += t
+                else:
+                    l += 1
+        else:
+            l = self.memsize(dst)
+            dst = [dst]
+
+        m = self.memsize(src)
+
+        i = 0
+        for d in dst:
+            for j in range(self.memsize(d)):
+                if self.memsize(src) > 1:
+                    sp = self.builder.gep(src, [i32(0), i32(i)])
+                    v = self.builder.load(sp)
+                elif self.memsize(src) > 0:
+                    sp = src
+                    v = self.builder.load(sp)
+                else:
+                    v = src
+                if self.memsize(d) > 1:
+                    dp = self.builder.gep(d, [i32(0), i32(j)])
+                elif self.memsize(d) > 0:
+                    dp = d
+                self.builder.store(v, dp)
+                i += 1
+
     def load(self, e):
         e = self.expr(e)
-        if e.type == i32:
-            return e
         if e.type == i32p:
             return self.builder.load(e)
-        raise SyntaxError
+        # if e.type == i32:
+        return e
+
+    def loadvalue(self, e):
+        src = self.load(e)
+        if not isinstance(src.type, ir.PointerType):
+            return src
+        if not isinstance(src.type.pointee, ir.ArrayType):
+            return src
+
+        n = src.type.pointee.count
+        dst = self.builder.alloca(ir.ArrayType(i32, n))
+        for i in range(n):
+            fp = self.builder.gep(src, [i32(0), i32(i)])
+            val = self.builder.load(fp)
+            ap = self.builder.gep(dst, [i32(0), i32(i)])
+            self.builder.store(val, ap)
+
+        return dst
 
     def expr(self, e):
         # Atom
@@ -325,6 +406,33 @@ class PGen:
             if t == '/':
                 return self.builder.sdiv(lhs, rhs)
 
+        if isinstance(e, list):
+            n = self.c.expr(e).n
+            tup = self.builder.alloca(ir.ArrayType(i32, n))
+
+            i = 0
+            for ee in e:
+                field = self.load(ee)
+                typ = field.type
+
+                if isinstance(typ, ir.PointerType):
+                    typ = typ.pointee
+
+                if isinstance(typ, ir.ArrayType):
+                    sz = typ.count
+                    for j in range(sz):
+                        fp = self.builder.gep(field, [i32(0), i32(j)])
+                        val = self.builder.load(fp)
+                        ap = self.builder.gep(tup, [i32(0), i32(i)])
+                        self.builder.store(val, ap)
+                        i += 1
+                else:
+                    ap = self.builder.gep(tup, [i32(0), i32(i)])
+                    self.builder.store(field, ap)
+                    i += 1
+
+            return tup
+
         if t == 'INDEX':
             _, arr, index = e
             rec = self.c.symget(arr.value)
@@ -337,6 +445,12 @@ class PGen:
                 index = self.builder.sub(index, i32(lo))
 
             return self.builder.gep(arr, [i32(0), index])
+
+        if t == 'TREF':
+            _, tup, field = e
+            tup = self.expr(tup)
+            field = i32(field.value-1)
+            return self.builder.gep(tup, [i32(0), field])
 
     def id(self, t):
         if self.c.compatible(t, PlexToken):
