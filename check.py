@@ -76,7 +76,7 @@ class PChecker:
             self.err(f'in array initiliazation: {e}')
 
         try:
-            lo, hi = self.range(r)
+            lo, hi = self.arrayrange(r)
         except SyntaxError as err:
             self.err(f'when parsing range for {tok}:', err)
             return
@@ -90,14 +90,14 @@ class PChecker:
                 ind = Scalar(tok=itok)
                 self.localsym[name] = ind
                 e = self.expr(e)
-                if not self.compatible(e, Scalar):
+                if not self.compatible(e, (IntLit, Scalar)):
                     self.err(f'set-expr for {tok}: expression must be int')
 
         a = Array(lo=lo, hi=hi, tok=tok)
-        self.localsym[name] = a
+        self.localsym[tok.value] = a
         self.log(f'declaring array {a}')
 
-    def range(self, r):
+    def arrayrange(self, r):
         _, e1, e2 = r
         t1 = self.expr(e1)
         t2 = self.expr(e2)
@@ -110,6 +110,13 @@ class PChecker:
             raise SyntaxError('lo > hi')
 
         return lo,hi
+
+    def looprange(self, r):
+        _, e1, e2 = r
+        t1 = self.expr(e1)
+        t2 = self.expr(e2)
+        if not self.compatible((t1, t2), (IntLit, Scalar)):
+            raise SyntaxError('range endpoints must be int')
 
     def globaldecl(self, decl):
         kw, tok, expr = decl
@@ -358,7 +365,7 @@ class PChecker:
             if not self.compatible(d, Array):
                 raise SyntaxError(f'cannot iterate over non array variable {d}')
         else:
-            self.range(s)
+            self.looprange(s)
 
     def expr(self, e):
         # Atom

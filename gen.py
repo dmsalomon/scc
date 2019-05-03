@@ -44,15 +44,15 @@ class PGen:
 
             if self.c.compatible(typ, Scalar):
                 t = i32
-
-            if self.c.compatible(typ, Tuple):
+            elif self.c.compatible(typ, Tuple):
                 n = typ.n
                 t = structy(n)
-
-            if self.c.compatible(typ, Array):
+            elif self.c.compatible(typ, Array):
                 sz = typ.hi - typ.lo + 1
                 assert(sz > 0)
                 t = ir.ArrayType(i32, sz)
+            else:
+                raise Exception(typ)
 
             g = ir.GlobalVariable(self.mod, t, name=name)
             g.linkage = 'internal'
@@ -113,12 +113,14 @@ class PGen:
     def compound(self, ast):
         switch = {
             'GLOBAL': self.globaldecl,
+            'ARRAY': self.arraydecl,
             'ASSIGN': self.assign,
             'EXCHANGE': self.exchange,
             'DEFUN': lambda s: None,
             'PRINT': self.printstmt,
             'IF': self.ifstmt,
             'WHILE': self.whilestmt,
+            'FOREACH': self.foreachstmt,
         }
         for s in ast:
             t = s[0].type
@@ -181,6 +183,35 @@ class PGen:
 
         self.builder = ir.IRBuilder(blockend)
 
+    def foreachstmt(self, s):
+        _, i, c, sx = s
+
+        lo, hi = self.range(c)
+        i = self.expr(i)
+        iback = self.builder.alloca(i32)
+        self.builder.store(lo, iback)
+
+        blockcond = self.builder.append_basic_block()
+        blockbody = self.builder.append_basic_block()
+        blockend = self.builder.append_basic_block()
+
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockcond)
+        inext = self.builder.load(iback)
+        self.builder.store(inext, i)
+        cond = self.builder.icmp_signed('>', inext, hi)
+        self.builder.cbranch(cond, blockend, blockbody)
+
+        self.builder = ir.IRBuilder(blockbody)
+        self.compound(sx)
+        inext = self.builder.add(inext, i32(1))
+        self.builder.store(inext, iback)
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockend)
+
+
     def _bool(self, b):
         op, lhs, rhs = b
         lhs = self.load(lhs)
@@ -202,6 +233,42 @@ class PGen:
         g = self.gx[tok.value]
         self.builder.store(v, g)
 
+    def arraydecl(self, decl):
+        _, arr, r, se = decl
+
+        if not se:
+            return
+
+        _, i, expr = se
+        arr = self.expr(arr)
+
+        lo, hi = self.range(r)
+        i = self.expr(i)
+        self.builder.store(lo, i)
+
+        blockcond = self.builder.append_basic_block()
+        blockbody = self.builder.append_basic_block()
+        blockend = self.builder.append_basic_block()
+
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockcond)
+        ival = self.builder.load(i)
+        cond = self.builder.icmp_signed('>', ival, hi)
+        self.builder.cbranch(cond, blockend, blockbody)
+
+        self.builder = ir.IRBuilder(blockbody)
+        ai = self.load(expr)
+        ioffset = self.builder.sub(ival, lo)
+        ap = self.builder.gep(arr, [i32(0), ioffset])
+        self.builder.store(ai, ap)
+        ival = self.builder.load(i)
+        ival = self.builder.add(ival, i32(1))
+        self.builder.store(ival, i)
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockend)
+
     def assign(self, s):
         _, lhs, rhs = s
 
@@ -218,6 +285,12 @@ class PGen:
         rval = self.load(rhs)
         self.builder.store(rval, lloc)
         self.builder.store(lval, rloc)
+
+    def range(self, r):
+        _, el, er = r
+        vl = self.load(el)
+        vr = self.load(er)
+        return vl, vr
 
     def load(self, e):
         e = self.expr(e)
@@ -251,6 +324,19 @@ class PGen:
                 return self.builder.mul(lhs, rhs)
             if t == '/':
                 return self.builder.sdiv(lhs, rhs)
+
+        if t == 'INDEX':
+            _, arr, index = e
+            rec = self.c.symget(arr.value)
+            lo = rec.lo
+
+            arr = self.expr(arr)
+            index = self.load(index)
+
+            if lo:
+                index = self.builder.sub(index, i32(lo))
+
+            return self.builder.gep(arr, [i32(0), index])
 
     def id(self, t):
         if self.c.compatible(t, PlexToken):
