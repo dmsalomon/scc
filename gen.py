@@ -118,6 +118,7 @@ class PGen:
             'DEFUN': lambda s: None,
             'PRINT': self.printstmt,
             'IF': self.ifstmt,
+            'WHILE': self.whilestmt,
         }
         for s in ast:
             t = s[0].type
@@ -161,6 +162,24 @@ class PGen:
 
         self.builder = ir.IRBuilder(blockjoin)
 
+    def whilestmt(self, s):
+        _, b, sx = s
+
+        blockcond = self.builder.append_basic_block()
+        blockbody = self.builder.append_basic_block()
+        blockend = self.builder.append_basic_block()
+
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockcond)
+        cond = self._bool(b)
+        self.builder.cbranch(cond, blockbody, blockend)
+
+        self.builder = ir.IRBuilder(blockbody)
+        self.compound(sx)
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockend)
 
     def _bool(self, b):
         op, lhs, rhs = b
@@ -257,7 +276,8 @@ class PGen:
 
     def compile(self):
         llvm_ir = str(self.mod)
-        print(llvm_ir)
+        with open('o.llx', 'w') as f:
+            print(llvm_ir, file=f)
         try:
             mod = binding.parse_assembly(llvm_ir)
         except Exception as e:
