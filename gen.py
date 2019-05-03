@@ -181,6 +181,49 @@ class PGen:
         self.builder = ir.IRBuilder(blockend)
 
     def foreachstmt(self, s):
+        _, _, c, _ = s
+        if self.c.compatible(c, PlexToken):
+            self.foreacharr(s)
+        else:
+            self.foreachindex(s)
+
+    def foreacharr(self, s):
+        _, i, c, sx = s
+
+        rec = self.c.symget(c.value)
+        lo, hi = rec.lo, rec.hi
+        if lo > 0:
+            hi = hi-lo+1
+
+        arr = self.load(c)
+
+        a = self.expr(i)
+        i = self.builder.alloca(i32)
+        self.builder.store(i32(0), i)
+
+        blockcond = self.builder.append_basic_block()
+        blockbody = self.builder.append_basic_block()
+        blockend = self.builder.append_basic_block()
+
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockcond)
+        icur = self.builder.load(i)
+        cond = self.builder.icmp_signed('>=', icur, i32(hi))
+        self.builder.cbranch(cond, blockend, blockbody)
+
+        self.builder = ir.IRBuilder(blockbody)
+        ap = self.builder.gep(arr, [i32(0), icur])
+        acur = self.builder.load(ap)
+        self.builder.store(acur, a)
+        self.compound(sx)
+        icur = self.builder.add(icur, i32(1))
+        self.builder.store(icur, i)
+        self.builder.branch(blockcond)
+
+        self.builder = ir.IRBuilder(blockend)
+
+    def foreachindex(self, s):
         _, i, c, sx = s
 
         lo, hi = self.range(c)
