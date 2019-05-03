@@ -1,5 +1,3 @@
 parser.out
 parsetab.py
-o
-o.o
-o.ll
+o*

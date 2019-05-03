@@ -114,13 +114,59 @@ class PGen:
         switch = {
             'GLOBAL': self.globaldecl,
             'ASSIGN': self.assign,
+            'EXCHANGE': self.exchange,
             'DEFUN': lambda s: None,
             'PRINT': self.printstmt,
+            'IF': self.ifstmt,
         }
         for s in ast:
             t = s[0].type
             f = switch.get(t)
             if f: f(s)
+
+    def ifstmt(self, s):
+        _, b, sx, ei, els = s
+
+        cond = self._bool(b)
+
+        blockif = self.builder.append_basic_block()
+        blockel = self.builder.append_basic_block()
+        blockjoin = self.builder.append_basic_block()
+
+        self.builder.cbranch(cond, blockif, blockel)
+
+        self.builder = ir.IRBuilder(blockif)
+        self.compound(sx)
+        self.builder.branch(blockjoin)
+
+        self.builder = ir.IRBuilder(blockel)
+
+        if ei:
+            for _, b, sx in ei:
+                blockif = self.builder.append_basic_block()
+                blockel = self.builder.append_basic_block()
+                cond = self._bool(b)
+                self.builder.cbranch(cond, blockif, blockel)
+
+                self.builder = ir.IRBuilder(blockif)
+                self.compound(sx)
+                self.builder.branch(blockjoin)
+                self.builder = ir.IRBuilder(blockel)
+
+        if els:
+            _, sx = els
+            self.compound(sx)
+
+        self.builder.branch(blockjoin)
+
+        self.builder = ir.IRBuilder(blockjoin)
+
+
+    def _bool(self, b):
+        op, lhs, rhs = b
+        lhs = self.load(lhs)
+        rhs = self.load(rhs)
+        return self.builder.icmp_signed(op, lhs, rhs)
 
     def printstmt(self, s):
         _, e = s
@@ -143,6 +189,16 @@ class PGen:
         loc = self.expr(lhs)
         val = self.load(rhs)
         self.builder.store(val, loc)
+
+    def exchange(self, s):
+        _, lhs, rhs = s
+
+        lloc = self.expr(lhs)
+        lval = self.load(lhs)
+        rloc = self.expr(rhs)
+        rval = self.load(rhs)
+        self.builder.store(rval, lloc)
+        self.builder.store(lval, rloc)
 
     def load(self, e):
         e = self.expr(e)
@@ -201,7 +257,12 @@ class PGen:
 
     def compile(self):
         llvm_ir = str(self.mod)
-        mod = binding.parse_assembly(llvm_ir)
+        print(llvm_ir)
+        try:
+            mod = binding.parse_assembly(llvm_ir)
+        except Exception as e:
+            print(llvm_ir)
+            raise(e)
         mod.verify()
         self.engine.add_module(mod)
         self.engine.finalize_object()
