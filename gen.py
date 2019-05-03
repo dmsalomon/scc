@@ -192,8 +192,7 @@ class PGen:
 
         rec = self.c.symget(c.value)
         lo, hi = rec.lo, rec.hi
-        if lo > 0:
-            hi = hi-lo+1
+        hi = hi-lo+1
 
         arr = self.load(c)
 
@@ -283,6 +282,9 @@ class PGen:
         if not se:
             return
 
+        rec = self.c.symget(arr.value)
+        lop, hip = rec.lo, rec.hi
+
         _, i, expr = se
         arr = self.expr(arr)
 
@@ -303,7 +305,10 @@ class PGen:
 
         self.builder = ir.IRBuilder(blockbody)
         ai = self.load(expr)
-        ioffset = self.builder.sub(ival, lo)
+        if lop:
+            ioffset = self.builder.sub(ival, lo)
+        else:
+            ioffset = ival
         ap = self.builder.gep(arr, [i32(0), ioffset])
         self.builder.store(ai, ap)
         ival = self.builder.load(i)
