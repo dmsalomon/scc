@@ -77,7 +77,12 @@ class PGen:
         main = ir.Function(self.mod, fty, name='main')
         self.entry = main
 
-        self.fx = [printf, scanf, pint, main]
+        self.fx = {
+            'printf': printf,
+            'scanf': scanf,
+            'pint': pint,
+            'main': main
+        }
 
     def functions(self):
         for name,f in self.c.sym.items():
@@ -88,32 +93,69 @@ class PGen:
             assert(nargs > 0)
             ret = f.rettype
 
-            arg = ir.ArrayType(i32, nargs)
+            arg = ir.ArrayType(i32, nargs).as_pointer()
 
-            if self.c.compatible(ret, Scalar):
-                ret = i32
+            if self.c.compatible(ret, (Scalar, IntLit)):
+                ret = ir.ArrayType(i32, 1)
             else:
-                assert(ret.n > 0)
-                ret = structy(ret.n)
+                ret = ir.ArrayType(i32, ret.n)
+            ret = ret.as_pointer()
 
-            f_ty = ir.FunctionType(ret, [arg], var_arg=False)
+            f_ty = ir.FunctionType(ir.VoidType(), [arg, ret], var_arg=False)
             func = ir.Function(self.mod, f_ty, name)
-            self.fx.append(func)
+            self.fx[name] = func
+
+            entryblock = func.append_basic_block(name='entry')
+            self.builder = ir.IRBuilder(entryblock)
+            self.lx = {}
+
+            for name,typ in f.sym.items():
+                if name == f.arg.tok.value:
+                    continue
+
+                if self.c.compatible(typ, Scalar):
+                    t = i32
+                elif self.c.compatible(typ, Tuple):
+                    n = typ.n
+                    t = ir.ArrayType(i32, n)
+                elif self.c.compatible(typ, Array):
+                    sz = typ.hi - typ.lo + 1
+                    assert(sz > 0)
+                    t = ir.ArrayType(i32, sz)
+                else:
+                    raise Exception(typ)
+
+                l = self.builder.alloca(t)
+                self.lx[name] = l
+
+            self.lx[f.arg.tok.value] = func.args[0]
+
+
+            self.c.localsym = f.sym
+
+            self.compound(f.ast)
+            try:
+                self.builder.unreachable()
+            except:
+                pass
 
     def main(self):
+        self.lx = {}
         entryblock = self.entry.append_basic_block(name='entry')
         self.builder = ir.IRBuilder(entryblock)
-        self.sym = self.c.sym
+        self.c.localsym = self.c.globalsym
         self.compound(self.c.ast)
         self.builder.ret(i32(0))
 
     def compound(self, ast):
         switch = {
             'GLOBAL': self.globaldecl,
+            'LOCAL': self.localdecl,
             'ARRAY': self.arraydecl,
             'ASSIGN': self.assign,
             'EXCHANGE': self.exchange,
             'DEFUN': lambda s: None,
+            'RETURN': self.returnstmt,
             'PRINT': self.printstmt,
             'IF': self.ifstmt,
             'WHILE': self.whilestmt,
@@ -133,11 +175,11 @@ class PGen:
         blockel = self.builder.append_basic_block()
         blockjoin = self.builder.append_basic_block()
 
-        self.builder.cbranch(cond, blockif, blockel)
+        self._cbranch(cond, blockif, blockel)
 
         self.builder = ir.IRBuilder(blockif)
         self.compound(sx)
-        self.builder.branch(blockjoin)
+        self._branch(blockjoin)
 
         self.builder = ir.IRBuilder(blockel)
 
@@ -146,18 +188,18 @@ class PGen:
                 blockif = self.builder.append_basic_block()
                 blockel = self.builder.append_basic_block()
                 cond = self._bool(b)
-                self.builder.cbranch(cond, blockif, blockel)
+                self._cbranch(cond, blockif, blockel)
 
                 self.builder = ir.IRBuilder(blockif)
                 self.compound(sx)
-                self.builder.branch(blockjoin)
+                self._branch(blockjoin)
                 self.builder = ir.IRBuilder(blockel)
 
         if els:
             _, sx = els
             self.compound(sx)
 
-        self.builder.branch(blockjoin)
+        self._branch(blockjoin)
 
         self.builder = ir.IRBuilder(blockjoin)
 
@@ -257,6 +299,18 @@ class PGen:
         rhs = self.load(rhs)
         return self.builder.icmp_signed(op, lhs, rhs)
 
+    def _branch(self, block):
+        try:
+            self.builder.branch(block)
+        except:
+            pass
+
+    def _cbranch(self, cond, block1, block2):
+        try:
+            self.builder.cbranch(cond, block1, block2)
+        except:
+            pass
+
     def printstmt(self, s):
         _, e = s
         e = self.load(e)
@@ -268,13 +322,38 @@ class PGen:
         if not expr:
             return
 
-        v = self.load(expr)
+        v = self.expr(expr)
         g = self.gx[tok.value]
 
         if self.memsize(v):
             self.memcpy(g, v)
         else:
             self.builder.store(v, g)
+
+    def localdecl(self, decl):
+        _, tok, expr = decl
+
+        if not expr:
+            return
+
+        v = self.load(expr)
+        l = self.lx[tok.value]
+
+        if self.memsize(v):
+            self.memcpy(l, v)
+        else:
+            self.builder.store(v, l)
+
+    def returnstmt(self, s):
+        _, e = s
+        e = self.load(e)
+        ret = self.builder.block.function.args[1]
+        if self.memsize(e) > 1:
+            self.memcpy(ret, e)
+        else:
+            ret = self.builder.gep(ret, [i32(0), i32(0)])
+            self.builder.store(e, ret)
+        self.builder.ret_void()
 
     def arraydecl(self, decl):
         _, arr, r, se = decl
@@ -296,12 +375,12 @@ class PGen:
         blockbody = self.builder.append_basic_block()
         blockend = self.builder.append_basic_block()
 
-        self.builder.branch(blockcond)
+        self._branch(blockcond)
 
         self.builder = ir.IRBuilder(blockcond)
         ival = self.builder.load(i)
         cond = self.builder.icmp_signed('>', ival, hi)
-        self.builder.cbranch(cond, blockend, blockbody)
+        self._cbranch(cond, blockend, blockbody)
 
         self.builder = ir.IRBuilder(blockbody)
         ai = self.load(expr)
@@ -326,11 +405,9 @@ class PGen:
         else:
             loc = self.expr(lhs)
         val = self.loadvalue(rhs)
-        print(val)
 
 
         if self.memsize(val) > 1:
-            print(lhs)
             self.memcpy(loc, val)
         else:
             self.builder.store(val, loc)
@@ -455,6 +532,7 @@ class PGen:
                 return self.builder.sdiv(lhs, rhs)
 
         if isinstance(e, list):
+            self.c.sym
             n = self.c.expr(e).n
             tup = self.builder.alloca(ir.ArrayType(i32, n))
 
@@ -499,6 +577,27 @@ class PGen:
             tup = self.expr(tup)
             field = i32(field.value-1)
             return self.builder.gep(tup, [i32(0), field])
+
+        if t == 'CALL':
+            _, f, e = e
+
+            func = self.fx[f.value]
+            rettype = func.args[1].type
+
+            args = self.loadvalue(e)
+            ret = self.builder.alloca(rettype.pointee)
+
+            if args.type == i32:
+                arr = self.builder.alloca(ir.ArrayType(i32,1))
+                ap = self.builder.gep(arr, [i32(0), i32(0)])
+                self.builder.store(args, ap)
+                args = arr
+
+            self.builder.call(func, [args, ret])
+            if ret.type.pointee == ir.ArrayType(i32, 1):
+                rp = self.builder.gep(ret, [i32(0), i32(0)])
+                ret = self.builder.load(rp)
+            return ret
 
     def id(self, t):
         if self.c.compatible(t, PlexToken):

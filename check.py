@@ -236,8 +236,12 @@ class PChecker:
         self.localsym = self.globalsym
         self.scope = Scope.GLOBAL
 
+        if not self.func.didret:
+            self.err(f'{tok} did not return')
+
         self.log(f'declared function {self.func}')
         self.func = None
+
 
     def returnstmt(self, t):
         kw, e = t
@@ -260,10 +264,13 @@ class PChecker:
 
             if (not self.compatible(e, rettype) or
                     self.compatible(e, Tuple) and rettype.n > 0 and e.n != rettype.n):
-                    self.err(f'{kw}: previously returned {rettype}')
+                    if not self.compatible((e, rettype), (IntLit, Scalar)):
+                        self.err(f'{kw}: previously returned {rettype}')
 
         except SyntaxError as err:
             self.err(f'in {kw}:', err)
+
+        self.func.didret = True
 
     def assign(self, e):
         kw, lhs, rhs = e
@@ -662,6 +669,7 @@ class Func:
         self.ast = ast
         self.tok = tok
         self.rettype = None
+        self.didret = False
     def __repr__(self):
         return f'Func(tok={self.tok},arg={self.arg},rettype={self.rettype},sym={self.sym})'
 
