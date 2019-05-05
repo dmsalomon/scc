@@ -136,6 +136,8 @@ class PGen:
             for name,typ in f.sym.items():
                 if name == f.arg.tok.value:
                     continue
+                if name in self.c.globalsym:
+                    continue
 
                 if self.c.compatible(typ, Scalar):
                     t = i32
