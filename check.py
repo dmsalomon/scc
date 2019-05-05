@@ -26,6 +26,9 @@ class PChecker:
         self.errors = False
 
     def check(self):
+        for n, f in builtins.items():
+            self.globalsym[n] = f
+
         self.compound(self.ast)
 
         self.log('symbol table:', self.globalsym)
@@ -43,6 +46,7 @@ class PChecker:
                     self.err(f'return type of {r.tok} remains unknown')
                 if self.compatible(r.rettype, Tuple) and r.rettype.n < 0:
                     self.err(f'number of elements in return for {r.tok} remains unknown')
+
 
     def compound(self, ast):
         switch = {
@@ -124,7 +128,7 @@ class PChecker:
 
         if self.scope == Scope.GLOBAL:
             if name in self.globalsym:
-                self.err(f'redeclaration of global variable {tok}')
+                self.err(f'redeclaration of {tok}')
                 return
         else:
             if name not in self.globalsym:
@@ -136,7 +140,11 @@ class PChecker:
                 self.err(f'cannot use global {tok}, since local {local} in scope')
             else:
             # indicate that the function is using a globally scoped variable
-                self.localsym[name] = self.globalsym[name]
+                g = self.globalsym[name]
+                if self.compatible(g, Func):
+                    self.err('cannot use function name as variable')
+                    return
+                self.localsym[name] = g
                 self.log(f'using global variable {tok} in {self.func.tok}')
             return
 
@@ -211,7 +219,11 @@ class PChecker:
             return
 
         if name in self.globalsym:
-            self.err(f'redeclaration of function {tok}')
+            if self.isreserved(name):
+                self.err(f'in {tok}: redeclaration of builtin {name}')
+                return
+            else:
+                self.err(f'redeclaration of function {tok}')
             # continue anyway
 
         self.localsym = {}
@@ -462,7 +474,13 @@ class PChecker:
         # Function
         if t == 'CALL':
             f = e[1]
-            func = self.symget(f.value)
+
+            try:
+                func = self.symget(f.value)
+            except:
+                self.err(f'no such function {f}')
+                return
+
             if not self.compatible(func, Func):
                 raise SyntaxError(f'no such function {f}')
 
@@ -540,6 +558,9 @@ class PChecker:
                 self.localsym[name] is self.globalsym[name]):
                     self.globalsym[name] = rec
             self.localsym[name] = rec
+
+    def isreserved(self, name):
+        return (name in self.globalsym) and (self.globalsym[name] is Reserved)
 
     def compatible(self, a, b):
         if not isinstance(a, tuple):
@@ -663,15 +684,28 @@ class Array:
         return f'Array(tok={self.tok},lo={self.lo},hi={self.hi})'
 
 class Func:
-    def __init__(self, arg, sym, ast, tok):
+    def __init__(self, arg, sym, ast, tok, rettype=None, didret=False):
         self.arg = arg
         self.sym = sym
         self.ast = ast
         self.tok = tok
-        self.rettype = None
+        self.rettype = rettype
         self.didret = False
     def __repr__(self):
         return f'Func(tok={self.tok},arg={self.arg},rettype={self.rettype},sym={self.sym})'
+
+Reserved = ()
+s = Scalar()
+builtins = {
+    'input': Func(
+        arg=Tuple(n=1),
+        sym=None,
+        ast=None,
+        tok='(input: builtin)',
+        rettype=s,
+        didret=True,
+    ),
+}
 
 if __name__ == '__main__':
     f = sys.stdin if len(sys.argv)<2 else open(sys.argv[1])

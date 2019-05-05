@@ -6,9 +6,10 @@ binding.initialize()
 binding.initialize_native_target()
 binding.initialize_native_asmprinter()
 
+i8 = ir.IntType(8)
+i8p = i8.as_pointer()
 i32 = ir.IntType(32)
 i32p = i32.as_pointer()
-charptr = ir.IntType(8).as_pointer()
 
 class PGen:
     def __init__(self, checker):
@@ -25,6 +26,7 @@ class PGen:
         self.engine = engine
 
         self.gx = {}
+        self.fx = {}
         self.lx = {}
 
         self.globals(self.c.sym)
@@ -51,42 +53,64 @@ class PGen:
             else:
                 raise Exception(typ)
 
-            g = ir.GlobalVariable(self.mod, t, name=name)
+            g = ir.GlobalVariable(self.mod, t, name=self.mod.get_unique_name())
             g.linkage = 'internal'
             gx[name] = g
 
     def builtins(self):
-        func_type = ir.FunctionType(i32, [charptr], var_arg=True)
+        func_type = ir.FunctionType(i32, [i8p], var_arg=True)
         printf= ir.Function(self.mod, func_type, name='printf')
         scanf = ir.Function(self.mod, func_type, name='scanf')
-        self.printf = printf
-        self.scanf = scanf
 
+        # pint
         func_type = ir.FunctionType(ir.VoidType(), [i32], var_arg=False)
-        pint = ir.Function(self.mod, func_type, name='pint')
+        pint = ir.Function(self.mod, func_type, name=self.mod.get_unique_name())
         builder = ir.IRBuilder(pint.append_basic_block(name='entry'))
         fmt = '%d\n\0'
         g_fmt = self.conststr(fmt)
-        fmt_arg = builder.bitcast(g_fmt, charptr)
+        fmt_arg = builder.bitcast(g_fmt, i8p)
         n = pint.args[0]
         builder.call(printf, [fmt_arg, n])
         builder.ret_void()
         self.pint = pint
 
+        # main function
         fty = ir.FunctionType(i32, [], False)
         main = ir.Function(self.mod, fty, name='main')
         self.entry = main
 
-        self.fx = {
-            'printf': printf,
-            'scanf': scanf,
-            'pint': pint,
-            'main': main
+        # input builtin
+        func_type = ir.FunctionType(i32, [i32], var_arg=False)
+        inp = ir.Function(self.mod, func_type, name=self.mod.get_unique_name())
+        builder = ir.IRBuilder(inp.append_basic_block(name='entry'))
+        g_fmt = self.conststr('>>> \0')
+        fmt_arg = builder.bitcast(g_fmt, i8p)
+        builder.call(printf, [fmt_arg])
+        g_fmt = self.conststr('%d\0')
+        fmt_arg = builder.bitcast(g_fmt, i8p)
+        val = builder.alloca(i32)
+        n = builder.call(scanf, [fmt_arg, val])
+        cond = builder.icmp_signed('!=', lhs=n, rhs=i32(1))
+        with builder.if_then(cond):
+            g_fmt = self.conststr(fmt)
+            n = inp.args[0]
+            builder.store(n, val)
+            builder.call(pint, [n])
+        valload = builder.load(val)
+        builder.ret(valload)
+
+        self._builtin = {
+            'input': self._builtin_input,
+        }
+        self._builtin_func = {
+            'input': inp
         }
 
     def functions(self):
         for name,f in self.c.sym.items():
             if not self.c.compatible(f, Func):
+                continue
+            if name in builtins:
                 continue
 
             nargs = f.arg.n
@@ -102,7 +126,7 @@ class PGen:
             ret = ret.as_pointer()
 
             f_ty = ir.FunctionType(ir.VoidType(), [arg, ret], var_arg=False)
-            func = ir.Function(self.mod, f_ty, name)
+            func = ir.Function(self.mod, f_ty, name=self.mod.get_unique_name())
             self.fx[name] = func
 
             entryblock = func.append_basic_block(name='entry')
@@ -579,12 +603,15 @@ class PGen:
             return self.builder.gep(tup, [i32(0), field])
 
         if t == 'CALL':
-            _, f, e = e
+            _, f, expr = e
+
+            if f.value in builtins:
+                return self._builtin[f.value](e)
 
             func = self.fx[f.value]
             rettype = func.args[1].type
 
-            args = self.loadvalue(e)
+            args = self.loadvalue(expr)
             ret = self.builder.alloca(rettype.pointee)
 
             if args.type == i32:
@@ -609,6 +636,12 @@ class PGen:
         if name in self.gx:
             return self.gx[name]
         raise Exception()
+
+    def _builtin_input(self, t):
+        _, f, e = t
+
+        e = self.expr(e)
+        return self.builder.call(self._builtin_func['input'], [e])
 
     def conststr(self, s):
         string_ty = ir.ArrayType(ir.IntType(8), len(s))
