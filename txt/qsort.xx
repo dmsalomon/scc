@@ -1,0 +1,65 @@
+
+defun collatzchains(a)
+  local n = a.1;
+
+  local len = 0;
+  local div = 0;
+  local mul = 0;
+
+  while n > 1 do
+    len = len + 1;
+    div = n/2;
+    mul = div*2;
+    if n == mul then
+      n = div;
+    else
+      n = 3*n+1;
+    end if
+  end while
+  return len;
+end defun
+
+global arr;
+array arr[1..20] p = collatzchains(p);
+
+defun partition(ind)
+  global arr;
+  local lo = ind.1;
+  local hi = ind.2;
+
+  local pivot = arr[hi];
+  local i = lo - 1;
+
+  foreach j in lo..hi-1 do
+    if arr[j] <= pivot then
+      i = i + 1;
+      arr[i] <-> arr[j];
+    end if
+  end for
+
+  arr[i+1] <-> arr[hi];
+  return i+1;
+end defun
+
+defun quicksort(ind)
+  local lo = ind.1;
+  local hi = ind.2;
+
+  if lo >= hi then
+    return 0;
+  end if
+
+  local pi = partition(lo,hi);
+
+  local ign = 0;
+  ign = quicksort(lo,pi-1);
+  ign = quicksort(lo+1,hi);
+
+  return 0;
+end defun
+
+global x = quicksort (1, 20);
+
+foreach ii in arr do
+  print ii;
+end for
