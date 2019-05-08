@@ -83,21 +83,24 @@ class PGen:
         func_type = ir.FunctionType(i32, [i32], var_arg=False)
         inp = ir.Function(self.mod, func_type, name='inp'+self.mod.get_unique_name())
         builder = ir.IRBuilder(inp.append_basic_block(name='entry'))
-        g_fmt = self.conststr('>>> \0')
+        n = inp.args[0]
+        g_fmt = self.conststr('%d> \0')
         fmt_arg = builder.bitcast(g_fmt, i8p)
-        builder.call(printf, [fmt_arg])
+        builder.call(printf, [fmt_arg, n])
         g_fmt = self.conststr('%d\0')
         fmt_arg = builder.bitcast(g_fmt, i8p)
         val = builder.alloca(i32)
+        builder.store(n, val)
         n = builder.call(scanf, [fmt_arg, val])
-        cond = builder.icmp_signed('!=', lhs=n, rhs=i32(1))
+        cond = builder.icmp_signed('==', lhs=n, rhs=i32(1))
         with builder.if_then(cond):
-            g_fmt = self.conststr(fmt)
-            n = inp.args[0]
-            builder.store(n, val)
-            builder.call(pint, [n])
-        valload = builder.load(val)
-        builder.ret(valload)
+            builder.ret(builder.load(val))
+        cond = builder.icmp_signed('<', lhs=n, rhs=i32(0))
+        with builder.if_then(cond):
+            g_fmt = self.conststr('\n\0')
+            fmt_arg = builder.bitcast(g_fmt, i8p)
+            builder.call(printf, [fmt_arg])
+        builder.ret(inp.args[0])
 
         self._builtin = {
             'input': self._builtin_input,
