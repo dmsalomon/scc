@@ -1,0 +1,36 @@
+
+defun factorial(p)
+  local n = p.1;
+
+  if n < 2 then
+    return 1;
+  else
+    return n * factorial(n-1);
+  end if
+end defun
+
+global arr;
+array arr[3..9] vvv = factorial(vvv);
+
+defun binsearch(p)
+  global arr;
+
+  local lo = p.1;
+  local hi = p.2;
+  local val = p.3;
+  local mid = (lo + hi) / 2;
+
+  if hi < lo then
+    return 0-1;
+  end if
+
+  if arr[mid] > val then
+    return binsearch(lo, mid-1, val);
+  elsif arr[mid] < val then
+    return binsearch(mid+1, hi, val);
+  else
+    return mid;
+  end if
+end defun
+
+print binsearch(3, 9, input(factorial(7)));

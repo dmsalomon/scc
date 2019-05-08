@@ -642,7 +642,7 @@ class PGen:
     def _builtin_input(self, t):
         _, f, e = t
 
-        e = self.expr(e)
+        e = self.load(e)
         return self.builder.call(self._builtin_func['input'], [e])
 
     def conststr(self, s):
