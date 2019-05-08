@@ -53,7 +53,7 @@ class PGen:
             else:
                 raise Exception(typ)
 
-            g = ir.GlobalVariable(self.mod, t, name=self.mod.get_unique_name())
+            g = ir.GlobalVariable(self.mod, t, name=name+self.mod.get_unique_name())
             g.linkage = 'internal'
             gx[name] = g
 
@@ -64,7 +64,7 @@ class PGen:
 
         # pint
         func_type = ir.FunctionType(ir.VoidType(), [i32], var_arg=False)
-        pint = ir.Function(self.mod, func_type, name=self.mod.get_unique_name())
+        pint = ir.Function(self.mod, func_type, name='pint'+self.mod.get_unique_name())
         builder = ir.IRBuilder(pint.append_basic_block(name='entry'))
         fmt = '%d\n\0'
         g_fmt = self.conststr(fmt)
@@ -81,7 +81,7 @@ class PGen:
 
         # input builtin
         func_type = ir.FunctionType(i32, [i32], var_arg=False)
-        inp = ir.Function(self.mod, func_type, name=self.mod.get_unique_name())
+        inp = ir.Function(self.mod, func_type, name='inp'+self.mod.get_unique_name())
         builder = ir.IRBuilder(inp.append_basic_block(name='entry'))
         g_fmt = self.conststr('>>> \0')
         fmt_arg = builder.bitcast(g_fmt, i8p)
@@ -126,7 +126,7 @@ class PGen:
             ret = ret.as_pointer()
 
             f_ty = ir.FunctionType(ir.VoidType(), [arg, ret], var_arg=False)
-            func = ir.Function(self.mod, f_ty, name=self.mod.get_unique_name())
+            func = ir.Function(self.mod, f_ty, name=name+self.mod.get_unique_name())
             self.fx[name] = func
 
             entryblock = func.append_basic_block(name='entry')
