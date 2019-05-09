@@ -1,0 +1,18 @@
+
+global sum = 0;
+global n = 0;
+
+global inp = input(0-1);
+
+while inp >= 0 do
+  sum = sum + inp;
+  n = n + 1;
+  inp = input(0-1);
+end while
+
+if n < 1 then
+  print 0-1;
+else
+  print sum / n;
+end if
+
