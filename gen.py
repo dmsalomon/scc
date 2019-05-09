@@ -60,7 +60,14 @@ class PGen:
     def builtins(self):
         func_type = ir.FunctionType(i32, [i8p], var_arg=True)
         printf= ir.Function(self.mod, func_type, name='printf')
-        scanf = ir.Function(self.mod, func_type, name='scanf')
+        func_type = ir.FunctionType(i32, [i8p, i8p], var_arg=True)
+        sscanf = ir.Function(self.mod, func_type, name='sscanf')
+        FILE = self.mod.context.get_identified_type('FILE')
+        FILEP = FILE.as_pointer()
+        func_type = ir.FunctionType(FILEP, [i32, i8p])
+        fdopen = ir.Function(self.mod, func_type, name='fdopen')
+        func_type = ir.FunctionType(i8p, [i8p, i32, FILEP], var_arg=False)
+        fgets = ir.Function(self.mod, func_type, name='fgets')
 
         # pint
         func_type = ir.FunctionType(ir.VoidType(), [i32], var_arg=False)
@@ -83,24 +90,29 @@ class PGen:
         func_type = ir.FunctionType(i32, [i32], var_arg=False)
         inp = ir.Function(self.mod, func_type, name='inp'+self.mod.get_unique_name())
         builder = ir.IRBuilder(inp.append_basic_block(name='entry'))
-        n = inp.args[0]
+        alt = inp.args[0]
+        buf = builder.alloca(i8, 256)
         g_fmt = self.conststr('%d> \0')
         fmt_arg = builder.bitcast(g_fmt, i8p)
         builder.call(printf, [fmt_arg, n])
-        g_fmt = self.conststr('%d\0')
-        fmt_arg = builder.bitcast(g_fmt, i8p)
-        val = builder.alloca(i32)
-        builder.store(n, val)
-        n = builder.call(scanf, [fmt_arg, val])
-        cond = builder.icmp_signed('==', lhs=n, rhs=i32(1))
-        with builder.if_then(cond):
-            builder.ret(builder.load(val))
-        cond = builder.icmp_signed('<', lhs=n, rhs=i32(0))
+        mode = self.conststr('r\0')
+        mode = builder.bitcast(mode, i8p)
+        stdin = builder.call(fdopen, [i32(0), mode])
+        s = builder.call(fgets, [buf, i32(256), stdin])
+        cond = builder.icmp_signed('==', builder.ptrtoint(s, i8), i8(0))
         with builder.if_then(cond):
             g_fmt = self.conststr('\n\0')
             fmt_arg = builder.bitcast(g_fmt, i8p)
             builder.call(printf, [fmt_arg])
-        builder.ret(inp.args[0])
+            builder.ret(alt)
+        val = builder.alloca(i32)
+        g_fmt = self.conststr('%d\0')
+        fmt_arg = builder.bitcast(g_fmt, i8p)
+        n = builder.call(sscanf, [buf, fmt_arg, val])
+        cond = builder.icmp_signed('==', lhs=n, rhs=i32(1))
+        with builder.if_then(cond):
+            builder.ret(builder.load(val))
+        builder.ret(alt)
 
         self._builtin = {
             'input': self._builtin_input,
