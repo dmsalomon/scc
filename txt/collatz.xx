@@ -1,0 +1,28 @@
+
+defun collatz(p)
+  local n = p.1;
+  local div = 0;
+  local mul = 0;
+  local len = 0;
+
+  print n;
+
+  while n > 1 do
+
+    div = n/2;
+    mul = div*2;
+
+    if mul == n then
+      n = div;
+    else
+      n = 3*n+1;
+    end if
+    len = len+1;
+
+    print n;
+  end while
+
+  return len;
+end defun
+
+print(collatz(input(871)));
