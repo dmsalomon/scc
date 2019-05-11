@@ -50,7 +50,7 @@ defun quicksort(ind)
   end if
 
   local pi = partition(lo,hi);
-  return quicksort(lo,pi-1)+quicksort(lo+1,hi);
+  return quicksort(lo,pi-1)+quicksort(pi+1,hi);
 end defun
 
 global x = quicksort (1, 20);
