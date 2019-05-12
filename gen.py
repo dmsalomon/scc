@@ -301,6 +301,8 @@ class PGen:
         self.compound(sx)
         icur = self.builder.add(icur, i32(1))
         self.builder.store(icur, i)
+        acur = self.builder.load(a)
+        self.builder.store(acur, ap)
         self.builder.branch(blockcond)
 
         self.builder = ir.IRBuilder(blockend)
