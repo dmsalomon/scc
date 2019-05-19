@@ -33,7 +33,6 @@ class PlexToken:
 class Plexer:
     reserved = {
         'array':    'ARRAY',
-        'tuple':    'TUPLE',
         'local':    'LOCAL',
         'global':   'GLOBAL',
         'defun':    'DEFUN',
