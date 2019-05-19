@@ -1,0 +1,20 @@
+
+Dov Salomon <dms833@nyu.edu>
+
+Language: Python 3 (I used python 3.7, but 3.6 should be new enough)
+
+Tools: ply (python lex+yacc library), llvmlite (llvm code generation), the llvm
+compiler (llc), and gcc (for linking against libc).
+
+Everything in the language is implemented as far as I know. (Except passing
+arrays to functions which I believe was considered optional).
+
+Code Generation:
+** Expression work
+** Loops work
+** Conditionals work
+** Assignment and exchanges work for arbitrarily complex tuple things.
+** Functions work (take tuple -> tuple) and support recursion.
+** Arrays work (and also looping over arrays)
+
+-- vim:tw=80:et:ts=2:fo-=l:

@@ -33,7 +33,6 @@ class PChecker:
 
         self.log('symbol table:', self.globalsym)
 
-        # TODO check for lingering amibguities
         for n,r in self.globalsym.items():
             if self.compatible(r, Undefined):
                 self.err(f'{r.tok} remains undefined')
@@ -433,8 +432,7 @@ class PChecker:
                 raise SyntaxError(f'invalid operands to {t}: {l} & {r}')
             return Scalar(tok=None)
 
-        # TODO array index
-
+        # array index
         if t == 'INDEX':
             _, name, index = e
             index = self.expr(index)
@@ -453,6 +451,7 @@ class PChecker:
             return Scalar(tok=None)
 
 
+        # tuple reference
         if t == 'TREF':
             field = e[2].value
             name = e[1].value

@@ -1,21 +1,26 @@
 
-Dov Salomon (dms833@nyu.edu)
+Dov Salomon <dms833@nyu.edu>
 
------------------------
-| Running the Checker |
------------------------
+--------------------| Running the Code Generator |--------------------
 
-The code is in check.py.
-Use python3 to run it as follows: python3 check.py <input>
-<input> is an optional parameter that gives the filename to check. If <input> is not given, the parser will parse from stdin. If using stdin, give <eof> (using <ctrl-d> on unix) to end input.
+The code is in `gen.py`.
 
-If an error is encountered while parsing, the parser will immediately report the error to stdout by specifying the offending token (or complaining that <eof> arrived unexpectedly).
+It requires the llvmlite library and a relatively new version of python
+3 (probably python 3.6 or newer, I used python 3.7).
 
------------------
-| Sample Inputs |
------------------
+Run it as follows: python3 gen.py <input>.
 
-The sample inputs and their outputs are in the txt/ directory. The inputs are named *.txt and the outputs are the correspondingly named files with the *.out.txt extension.
+The file parameter is optional, in which case input will be read from stdin. If
+all goes well, the output is an llvm ir file called `o.ll`. Run `make` to
+compile `o.ll` into a binary called `o`. (You will need the llvm compiler `llc`
+to compile, and `gcc` for linking against libc).
 
--------
-vim:et:ts=2:sw=2:sts=2:
+I have some sample programs in the txt/ directory using the .xx extension.
+
+If you want to only run the previous stages of the compiler (i.e. only scanner,
+or only checker+parser+scanner), you can do so by running the appropriate python
+file (scan.py, parse.py, check.py). They are invoked in exactly the same as the
+code generator.
+
+-- ignore my vim modeline :)
+-- vim:et:tw=80:fo-=l:

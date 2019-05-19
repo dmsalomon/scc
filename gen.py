@@ -6,6 +6,7 @@ binding.initialize()
 binding.initialize_native_target()
 binding.initialize_native_asmprinter()
 
+# llvm types for 32 and 8 bit integers (+ pointers)
 i8 = ir.IntType(8)
 i8p = i8.as_pointer()
 i32 = ir.IntType(32)
@@ -34,6 +35,7 @@ class PGen:
         self.functions()
         self.main()
 
+    # allocate all the globals
     def globals(self, sym):
         gx = self.gx
 
@@ -57,6 +59,7 @@ class PGen:
             g.linkage = 'internal'
             gx[name] = g
 
+    # setup the necessary builtins
     def builtins(self):
         func_type = ir.FunctionType(i32, [i8p], var_arg=True)
         printf= ir.Function(self.mod, func_type, name='printf')
@@ -121,6 +124,7 @@ class PGen:
             'input': inp
         }
 
+    # define and compile all functions
     def functions(self):
         for name,f in self.c.sym.items():
             if not self.c.compatible(f, Func):
@@ -180,6 +184,7 @@ class PGen:
             except:
                 pass
 
+    # compile the main function
     def main(self):
         self.lx = {}
         entryblock = self.entry.append_basic_block(name='entry')
@@ -188,6 +193,7 @@ class PGen:
         self.compound(self.c.ast)
         self.builder.ret(i32(0))
 
+    # compile the statements in ast
     def compound(self, ast):
         switch = {
             'GLOBAL': self.globaldecl,
@@ -489,6 +495,7 @@ class PGen:
         else:
             return 1
 
+    # copy a tuple into another tuple
     def memcpy(self, dst, src, n=None):
         if n is None:
             n = self.memsize(src)
@@ -525,13 +532,14 @@ class PGen:
                 self.builder.store(v, dp)
                 i += 1
 
+    # load value of an i32
     def load(self, e):
         e = self.expr(e)
         if e.type == i32p:
             return self.builder.load(e)
-        # if e.type == i32:
         return e
 
+    # loads a tuple expression into a temporary buffer
     def loadvalue(self, e):
         src = self.load(e)
         if not isinstance(src.type, ir.PointerType):
@@ -559,6 +567,7 @@ class PGen:
 
         t = e[0]
 
+        # Binary Expressions
         if t in self.c.binop_types:
             _, lhs, rhs = e
 
@@ -574,6 +583,7 @@ class PGen:
             if t == '/':
                 return self.builder.sdiv(lhs, rhs)
 
+        # Tuples
         if isinstance(e, list):
             self.c.sym
             n = self.c.expr(e).n
@@ -602,6 +612,7 @@ class PGen:
 
             return tup
 
+        # Array Indexing
         if t == 'INDEX':
             _, arr, index = e
             rec = self.c.symget(arr.value)
@@ -615,12 +626,14 @@ class PGen:
 
             return self.builder.gep(arr, [i32(0), index])
 
+        # Tuple Reference
         if t == 'TREF':
             _, tup, field = e
             tup = self.expr(tup)
             field = i32(field.value-1)
             return self.builder.gep(tup, [i32(0), field])
 
+        # Function Call
         if t == 'CALL':
             _, f, expr = e
 
@@ -645,6 +658,7 @@ class PGen:
                 ret = self.builder.load(rp)
             return ret
 
+    # Load an identifier address
     def id(self, t):
         if self.c.compatible(t, PlexToken):
             name = t.value
@@ -662,6 +676,7 @@ class PGen:
         e = self.load(e)
         return self.builder.call(self._builtin_func['input'], [e])
 
+    # Allocate a constant global string
     def conststr(self, s):
         string_ty = ir.ArrayType(ir.IntType(8), len(s))
         c_fmt = ir.Constant(string_ty, bytearray(s.encode('utf-8')))
@@ -701,6 +716,7 @@ if __name__ == '__main__':
     checker = PChecker(ast, debug=False)
     checker.check()
     if checker.errors:
-        raise SyntaxError
+        print('ERRORS')
+        sys.exit(1)
     codegen = PGen(checker)
     codegen.compile()
